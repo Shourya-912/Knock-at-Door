@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f6fff0;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container {
+      width: 100%;
+      max-width: 370px;
+      background: #e0f8d0;
+      border-radius: 14px;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.269);
+      padding: 32px 22px 18px 22px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .back-btn {
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #238915;
+      font-size: 6px;
+      text-decoration: none;
+      outline: none;
+    }
+    .back-btn-icon {
+      font-size: 15px;
+      margin-right: 2px;
+      vertical-align: middle;
+    }
+   .logo-img {
+    width: 240px;
+    margin-bottom: 6px;
+    display: block;
+    }
+
+    .login-heading {
+      font-size: 18px;
+      color: #787878;
+      margin-bottom: 2px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .login-title {
+      font-size: 20px;
+      color: #238915;
+      margin-bottom: 18px;
+      text-align: center;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+    }
+    .input-group {
+      width: 100%;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .input-icon {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: #787878;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .login-input {
+      width: 100%;
+      padding: 12px 38px 12px 12px;
+      border: none;
+      border-bottom: 2px solid #787878;
+      background: transparent;
+      font-size: 13px;
+      color: #787878;
+      outline: none;
+      transition: border 0.2s;
+      margin-bottom: 2px;
+    }
+
+    .input-group,.login-input {
+    box-sizing: border-box;
+    }
+    .login-input:focus {
+      border-bottom: 2px solid  #238915;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 12px 0;
+      border-radius: 5px;
+      font-size: 17px;
+      font-weight: bold;
+      border: none;
+      background:#97e463;
+      color:#0e5704;
+      cursor: pointer;
+      margin: 18px 0 8px 0;
+      transition: background 0.2s;
+    }
+    .login-btn:hover {
+      background: #0e5704;
+      color: #fff;
+    }
+    .forgot-link {
+      color: #787878;
+      text-decoration: none;
+      font-size: 13px;
+      display: block;
+      text-align: center;
+      margin-top: 2px;
+    }
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 500px) {
+      .login-container {
+        max-width: 98vw;
+        padding: 18px 4vw;
+      }
+      .logo-img {
+        width: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <form class="login-container" method="POST" action="/login">
+    <a href="/" class="back-btn">
+      <i class="fa-solid fa-chevron-left back-btn-icon"></i>
+    </a>
+    <img src="C:\Users\SHCHOURA\Desktop\knock-at-Door\frontend-flask\images\1.png" alt="Logo" class="logo-img">
+    <div class="login-heading">Proceed with your</div>
+    <div class="login-title">LOGIN</div>
+    <div class="input-group">
+      <input class="login-input" type="text" name="phone" placeholder="Phone No." required>
+      <i class="fa-solid fa-phone input-icon"></i>
+    </div>
+    <div class="input-group">
+      <input class="login-input" type="password" name="password" placeholder="Password" required>
+      <i class="fa-solid fa-key input-icon"></i>
+    </div>
+    <button class="login-btn" type="submit">Login</button>
+    <a class="forgot-link" href="#">Forget Password?</a>
+  </form>
+</body>
+</html>
