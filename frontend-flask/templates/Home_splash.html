@@ -3,60 +3,321 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home Splash</title>
+  <title>App Transition</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #f6fff0; /* Same as 15/255,158/255,56/255 */
+      background-color: #e7f0e0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* 3D Animated background shapes */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(2px);
+      z-index: 0;
+      opacity: 0.22;
+      box-shadow: 0 12px 48px 0 rgba(34,139,34,0.18), 0 0 80px 0 #97e46355;
+      animation: float3d 8s infinite alternate cubic-bezier(.4,2,.6,1);
+    }
+    .bg-shape1 {
+      width: 340px; height: 340px;
+      background: radial-gradient(circle at 30% 30%, #97e463 0%, #0e5704 100%);
+      left: -120px; top: -90px;
+      animation-delay: 0s;
+      box-shadow: 0 0 80px 20px #97e46355, 0 12px 48px 0 #0e570455;
+    }
+    .bg-shape2 {
+      width: 220px; height: 220px;
+      background: radial-gradient(circle at 70% 30%, #238915 0%, #e0f8d0 100%);
+      right: -80px; top: 60px;
+      animation-delay: 2s;
+      box-shadow: 0 0 60px 10px #23891555, 0 8px 32px 0 #e0f8d055;
+    }
+    .bg-shape3 {
+      width: 180px; height: 180px;
+      background: radial-gradient(circle at 50% 80%, #0e5704 0%, #97e463 100%);
+      left: 40px; bottom: -60px;
+      animation-delay: 1.2s;
+      box-shadow: 0 0 60px 10px #0e570455, 0 8px 32px 0 #97e46355;
+    }
+    .bg-cube {
+      position: absolute;
+      width: 80px; height: 80px;
+      left: 60%; top: 80px;
+      background: linear-gradient(135deg, #fff 10%, #97e463 90%);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px 0 #97e46355, 0 0 0 8px #fff2;
+      opacity: 0.18;
+      transform: rotateX(25deg) rotateY(20deg) rotateZ(10deg);
+      animation: cubeFloat 7s infinite alternate cubic-bezier(.4,2,.6,1);
+      z-index: 1;
+    }
+    @keyframes float3d {
+      0% { transform: translateY(0) scale(1);}
+      100% { transform: translateY(30px) scale(1.08);}
+    }
+    @keyframes cubeFloat {
+      0% { transform: translateY(0) rotateX(25deg) rotateY(20deg) rotateZ(10deg);}
+      100% { transform: translateY(40px) rotateX(35deg) rotateY(30deg) rotateZ(20deg);}
+    }
+
+    /* Splash Screen */
+    .splash {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: linear-gradient(135deg, #e0f8d0 0%, #f6fff0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      opacity: 1;
+      transition: opacity 1s cubic-bezier(.4,2,.6,1);
+    }
+    .splash-logo {
+      width: 220px;
+      height: 220px;
+      opacity: 0;
+      transform: scale(0.7) rotate(-10deg);
+      /* border-radius: 20%; */
+      /* box-shadow: 0 8px 32px rgba(34,139,34,0.13); */
+      /* background: #fff; */
+      animation: splashIn 4s 0.2s forwards ;/* splashSpin ko hata diya */
+    }
+    .splash.visible .splash-logo {
+      opacity: 0;
+    }
+    .splash.fade-out {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 3s cubic-bezier(.4,2,.6,1);
+    }
+    @keyframes splashIn {
+      0% { opacity: 0; transform: scale(0.7) rotate(-10deg);}
+      60% { opacity: 1; transform: scale(1.1) rotate(8deg);}
+      100% { opacity: 1; transform: scale(1) rotate(0);}
+    }
+    /* @keyframes splashSpin {
+      0% { filter: blur(0px);}
+      100% { filter: blur(0);}
+    } */
+
+    /* Home Page */
+    .home {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      font-family: Arial, sans-serif;
-      /* color: white; */
-    }
-
-    .logo {
-      width: 200px;
-      height: 200px;
-      position: absolute;
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -45%);
       opacity: 0;
-      transition: opacity 2s ease-in-out;
-      z-index: 1;
+      pointer-events: none;
+      transition: opacity 1s cubic-bezier(.4,2,.6,1);
+      background: #e7f0e0;
+    }
+    .home.show {
+      opacity: 1;
+      pointer-events: auto;
+      animation: homeFadeIn 1.7s 0.2s both;
+    }
+    @keyframes homeFadeIn {
+      0% { opacity: 0; transform: translateY(40px);}
+      100% { opacity: 1; transform: translateY(0);}
+    }
+    .container {
+      width: 100%;
+      max-width: 370px;
+      background: #dff3d27a;
+      border-radius: 28px;
+      box-shadow: 0 8px 48px 0 rgba(46, 58, 46, 0.18), 0 0 0 2px #97e46333;
+      padding: 44px 32px 28px 32px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+      backdrop-filter: blur(18px) saturate(1.3);
+      border: 1.5px solid #fff;
+      animation: fadeSlideIn 1.2s cubic-bezier(.4,2,.6,1) 0.3s both;
+      transition: box-shadow 0.3s;
+    }
+    .container:hover, .container:focus-within {
+      box-shadow: 0 16px 64px 0 #b6b8b455, 0 0 0 4px #c6e7c2e5;
+      border-color: #97e463;
+    }
+    @keyframes fadeSlideIn {
+      0% { opacity: 0; transform: translateY(40px) scale(0.97);}
+      100% { opacity: 1; transform: translateY(0) scale(1);}
     }
 
-    .logo.visible{
-      opacity: 1;
+    .main-img {
+      width: 80%;
+      margin-bottom: 18px;
+      margin-top: 10px;
+      display: block;
+      border-radius: 18px;
+      box-shadow: 0 2px 16px rgba(34,139,34,0.09), 0 0 0 8px #fff2;
+      opacity: 0;
+      animation: logoPop 1.1s 0.6s both;
     }
- 
+    @keyframes logoPop {
+      0% { opacity: 0; transform: scale(0.85);}
+      60% { opacity: 1; transform: scale(1.08);}
+      100% { opacity: 1; transform: scale(1);}
+    }
+
     .title {
-      font-size: 35px;
+      font-size: 30px;
+      color: #238915;
+      margin-top: 10px;
+      /* margin-bottom: 18px; */
       text-align: center;
-      margin-top: auto;
-      margin-bottom: 50px;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      opacity: 0;
+      animation: fadeInUp 1s 1.1s both;
+      text-shadow: 0 2px 8px #97e46322;
     }
- 
+    
     .subtitle {
-      font-size: 13px;
+      font-size: 1rem;
+      color: #7f7f7f;
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
+      white-space: pre-line;
+      line-height: 1.6;
+      opacity: 0;
+      animation: fadeInUp 1s 1.1s both;
+      text-shadow: 0 2px 8px #97e46322;
+    }
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(20px);}
+      100% { opacity: 1; transform: translateY(0);}
+    }
+
+    .btn {
+      width: 66%;
+      padding: 12px 0;
+      border-radius: 5px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      margin-bottom: 18px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+      box-shadow: 0 2px 8px rgba(34,139,34,0.07);
+      letter-spacing: 0.05em;
+      outline: none;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: btnIn 1.1s 1.7s both;
+    }
+    .btn:last-child {
+      animation-delay: 1.85s;
+    }
+    @keyframes btnIn {
+      0% { opacity: 0; transform: translateY(20px);}
+      100% { opacity: 1; transform: translateY(0);}
+    }
+    .btn-login {
+      background: linear-gradient(90deg, #0e5704 70%, #97e463 100%);
+      color: #fff;
+      border: 1.2px solid #0e5704;
+    }
+    .btn-login:hover, .btn-login:focus {
+      background: #fff;
+      color: #0e5704;
+      border: 1.2px solid #0e5704;
+      box-shadow: 0 4px 16px rgba(34,139,34,0.13);
+      transform: translateY(-2px) scale(1.03);
+    }
+    .btn-register {
+      background: #fff;
+      color: #008000;
+      border: 1.2px solid #008000;
+    }
+    .btn-register:hover, .btn-register:focus {
+      background: #97e463;
+      color: #0e5704;
+      border: 1.2px solid #0e5704;
+      box-shadow: 0 4px 16px rgba(34,139,34,0.13);
+      transform: translateY(-2px) scale(1.03);
+    }
+    @media (max-width: 500px) {
+      .container {
+        max-width: 98vw;
+        padding: 18px 4vw 18px 4vw;
+      }
+      .main-img {
+        max-width: 95vw;
+      }
+      .btn {
+        width: 90%;
+      }
+      .splash-logo {
+        width: 120px;
+        height: 120px;
+      }
+      .bg-cube {
+        width: 48px; height: 48px;
+        left: 70%; top: 40px;
+      }
     }
   </style>
 </head>
 <body>
-<div>
-  <!-- Logo Image -->
-  <img src="C:\Users\SHCHOURA\Desktop\knock-at-Door\frontend-flask\images\2.png" alt="Logo" class="logo">
+
+  
+
+  <!-- Splash Screen -->
+  <div class="splash visible">
+    <!-- Animated 3D Background Shapes -->
+    <div class="bg-shape bg-shape1"></div>
+    <div class="bg-shape bg-shape2"></div>
+    <div class="bg-shape bg-shape3"></div>
+    <div class="bg-cube"></div>
+    <img src="C:\Users\SHCHOURA\Desktop\knock-at-Door\frontend-flask\images\2.png" alt="Logo" class="splash-logo">
+  </div>
+
+  <!-- Home Page -->
+  <div class="home">
+    <!-- Animated 3D Background Shapes -->
+    <div class="bg-shape bg-shape1"></div>
+    <div class="bg-shape bg-shape2"></div>
+    <div class="bg-shape bg-shape3"></div>
+    <div class="bg-cube"></div>
+
+    <div class="container">
+      <img src="C:\Users\SHCHOURA\Desktop\knock-at-Door\frontend-flask\images\1.png" alt="Main" class="main-img">
+      <div class="title"><b>&nbsp; &nbsp;Hello !!</b></div>
+      <div class="subtitle">
+        Best and virtual place for vendors/garbage<br>vehicles and customers to communicate
+      </div>
+      <button class="btn btn-login" onclick="window.location.href='Login.html'">
+        <i class="fa-solid fa-right-to-bracket"></i> LOGIN
+      </button>
+      <button class="btn btn-register" onclick="window.location.href='register.html'">
+        <i class="fa-solid fa-user-plus"></i> REGISTER
+      </button>
+    </div>
+  </div>
+
   <script>
-    window.addEventListener('DOMContentLoaded', function() {
-      document.querySelector('.logo').classList.add('visible');
+    window.addEventListener('DOMContentLoaded', function () {
+      const splash = document.querySelector('.splash');
+      const home = document.querySelector('.home');
+      // Animate splash logo in
+      setTimeout(() => splash.classList.add('visible'), 100);
+      // Splash animation duration (4s) + 1s pause = 5000ms
+      setTimeout(() => {
+        splash.classList.add('fade-out');
+        home.classList.add('show');
+      }, 5000); // 4s animation + 1s pause
     });
-  </script> 
-</div> 
+  </script>
 </body>
 </html>
