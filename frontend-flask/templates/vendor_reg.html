@@ -5,152 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register as User</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #f6fff0;
-      font-family: Arial, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    /* .container {
-      width: 100vw;
-      max-width: 500px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-    } */
-
-    .topbar {
-      width: 100vw;
-      max-width: 500px;
-      background:  #e0f8d0;
-      border-radius: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.269);
-      padding: 18px 0 10px 0;
-      display: flex;
-      align-items: center;
-      position: sticky;
-    }
-    .topbar .back-btn {
-      margin-left: 18px;
-      color: #238915;
-      background: none;
-      border: none;
-      font-size: 22px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-    }
-    .topbar-title {
-      flex: 1;
-      font-size: 20px;
-      color: #238915;
-      font-weight: bold;
-      text-align: center;
-      letter-spacing: 0.05em;
-      margin-right: 0;
-      padding-left: 12px;
-    }
-    .form-container {
-      width: 100vw;
-      max-width: 500px;
-      margin-top: 25px;  
-      background: #e0f8d0;
-      border-radius: 14px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.269);
-      padding: 18px 18px 18px 18px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow-y: auto;
-      max-height: 85vh;
-    
-    }
-    .form-title {
-      font-size: 22px;
-      color:  #238915;
-      text-align: center;
-      margin-bottom: 18px;
-      margin-top: 10px;
-      font-weight: bold;
-      letter-spacing: 0.1em;
-    }
-    .input-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-      width: 100%;
-    }
-    .input-icon {
-      font-size: 22px;
-      color: #238915;
-      min-width: 28px;
-      text-align: center;
-      opacity: 0.8;
-    }
-    .form-input {
-      flex: 1;
-      padding: 10px 12px;
-      border: none;
-      border-bottom: 1.5px solid #238915;
-      background: #fff;
-      font-size: 16px;
-      color: #222;
-      outline: none;
-      border-radius: 6px 6px 0 0;
-      transition: border 0.2s;
-    }
-    .form-input:focus {
-      border-bottom: 2px solid #0e5704;
-    }
-    .submit-btn {
-      width: 60%;
-      padding: 12px 0;
-      border-radius: 5px;
-      font-size: 17px;
-      font-weight: bold;
-      border: none;
-      background: #0e5704;
-      color: #fff;
-      cursor: pointer;
-      margin: 22px auto 8px auto;
-      transition: background 0.2s;
-      display: block;
-      text-align: center;
-    }
-    .submit-btn:hover {
-      background: #97e463;
-      color: #0e5704;
-    }
-    @media (max-width: 600px) {
-      .form-container, .topbar {
-        max-width: 98vw;
-        padding: 12px 2vw;
-      }
-      
-      .form-title {
-        font-size: 18px;
-      }
-      .submit-btn {
-        width: 90%;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="../stylesheet/intf_reg.css">
+  <link rel="stylesheet" href="../stylesheet/animate.css">
 </head>
 <body>
+    <!-- Animated 3D Background Shapes -->
+    <div class="bg-shape bg-shape1"></div>
+    <div class="bg-shape bg-shape2"></div>
+    <div class="bg-shape bg-shape3"></div>
+    <div class="bg-cube"></div>
+
   <!-- <div class="container"> -->
     <div class="topbar">
-      <a href="/register" class="back-btn">
+      <button class="back-btn" onclick="window.location.href='register.html'">
         <i class="fa-solid fa-arrow-left"></i>
-      </a>
+      </button>
       <span class="topbar-title">Register as User</span>
     </div>
     <form class="form-container" method="POST" action="/reg_user">
