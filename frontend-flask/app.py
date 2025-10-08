@@ -21,7 +21,7 @@ def register():
     return render_template("register.html")
  
 @app.route("/customer/register", methods=["POST"])
-def register_customer():
+def cust_reg():
     if request.method == "POST":
         # yaha form data capture hoga
         first_name = request.form["first_name"]
@@ -32,10 +32,11 @@ def register_customer():
  
         # TODO: save to database
         return "Customer registered successfully!"
+     
     return render_template("cust_reg.html")
 
 @app.route("/vendor/register", methods=["POST"])
-def register_vendor():
+def vendor_reg():
     if request.method == "POST":
         first_name = request.form["first_name"]
         last_name = request.form["last_name"]
@@ -45,6 +46,7 @@ def register_vendor():
         localities = request.form.getlist("locality_extra[]")
         # TODO: Save to DB
         return "Vendor registered successfully!"
+     
     return render_template("vendor_reg.html")
  
 if __name__ == "__main__":
