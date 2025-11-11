@@ -6,7 +6,7 @@ provider "aws" {
 resource "aws_security_group" "app_sg" {
   name        = "knock-at-door-sg"
   description = "Allow SSH, HTTP and app port"
-  vpc_id      = data.aws_vpc.selected.id
+  vpc_id      = data.aws_vpc.default.id
  
   ingress {
     description = "SSH"
@@ -165,7 +165,7 @@ resource "aws_lb_target_group" "flask_tg" {
   name     = "flask-tg"
   port     = 5000
   protocol = "HTTP"
-  vpc_id   = data.aws_vpc.selected.id
+  vpc_id   = data.aws_vpc.default.id
   health_check {
     interval            = 30
     path                = "/"
