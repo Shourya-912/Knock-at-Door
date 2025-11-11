@@ -1,0 +1,5 @@
+region = "us-east-1"
+key_name = "shourya_kd"
+allowed_ssh_cidr = "0.0.0.0/0"
+github_repo = "https://github.com/Shourya-912/Knock-at-Door.git"
+app_dir = "Knock-at-Door"
