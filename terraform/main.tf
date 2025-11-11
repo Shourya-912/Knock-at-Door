@@ -46,19 +46,13 @@ resource "aws_security_group" "app_sg" {
 }
  
 # Find default VPC
-data "aws_vpc" "selected"{
-    filter {
-      name = "is-default"
-      values = ["true"]
-    }
+data "aws_vpc" "default"{
+    default = true
 }
  
 # Find default subnets (first two)
-data "aws_subnets" "selected" {
-    filter {
-      name = "vpc-id"
-      values = [data.aws_vpc.selected.id]
-    }
+data "aws_subnet_ids" "default" {
+    vpc_id = data.aws_vpc.default.id
 }
  
 # IAM role & instance profile (optional; if you want instance permissions)
@@ -159,7 +153,7 @@ resource "aws_lb" "alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.app_sg.id]
-  subnets            = data.aws_subnets.selected.ids
+  subnets            = data.aws_subnet_ids.default.ids
   enable_deletion_protection = false
   tags = {
     Name = "knock-at-door-alb"
