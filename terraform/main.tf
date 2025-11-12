@@ -47,10 +47,7 @@ resource "aws_security_group" "app_sg" {
  
 # Find default VPC
 data "aws_vpc" "selected"{
-    filter {
-      name = "is-default"
-      values = ["true"]
-    }
+    default = true
 }
  
 # Find default subnets (first two)
@@ -59,6 +56,10 @@ data "aws_subnets" "selected" {
       name = "vpc-id"
       values = [data.aws_vpc.selected.id]
     }
+    filter {
+    name   = "default-for-az"
+    values = ["true"]
+  }
 }
  
 # IAM role & instance profile (optional; if you want instance permissions)
@@ -152,20 +153,21 @@ resource "aws_instance" "app" {
     Name = "knock-at-door-instance"
   }
 }
- 
+
 # Create ALB
 resource "aws_lb" "alb" {
   name               = "knock-at-door-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.app_sg.id]
-  subnets            = data.aws_subnets.selected.ids
+  subnets            = data.aws_subnets.default.ids  # Use all default subnets
   enable_deletion_protection = false
+  
   tags = {
     Name = "knock-at-door-alb"
   }
 }
- 
+
 # Target group for Flask on port 5000
 resource "aws_lb_target_group" "flask_tg" {
   name     = "flask-tg"
