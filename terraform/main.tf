@@ -6,7 +6,7 @@ provider "aws" {
 resource "aws_security_group" "app_sg" {
   name        = "knock-at-door-sg"
   description = "Allow SSH, HTTP and app port"
-  vpc_id      = data.aws_vpc.selected.id
+  vpc_id      = data.aws_vpc.default.id
  
   ingress {
     description = "SSH"
@@ -47,19 +47,18 @@ resource "aws_security_group" "app_sg" {
  
 # Find default VPC
 data "aws_vpc" "selected"{
-    default = true
+    filter {
+      name = "is-default"
+      values = ["true"]
+    }
 }
  
 # Find default subnets (first two)
 data "aws_subnets" "selected" {
     filter {
       name = "vpc-id"
-      values = [data.aws_vpc.selected.id]
+      values = [data.aws_vpc.default.id]
     }
-    filter {
-    name   = "default-for-az"
-    values = ["true"]
-  }
 }
  
 # IAM role & instance profile (optional; if you want instance permissions)
@@ -153,27 +152,26 @@ resource "aws_instance" "app" {
     Name = "knock-at-door-instance"
   }
 }
-
+ 
 # Create ALB
 resource "aws_lb" "alb" {
   name               = "knock-at-door-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.app_sg.id]
-  subnets            = data.aws_subnets.default.ids  # Use all default subnets
+  subnets            = data.aws_subnets.default.ids
   enable_deletion_protection = false
-  
   tags = {
     Name = "knock-at-door-alb"
   }
 }
-
+ 
 # Target group for Flask on port 5000
 resource "aws_lb_target_group" "flask_tg" {
   name     = "flask-tg"
   port     = 5000
   protocol = "HTTP"
-  vpc_id   = data.aws_vpc.selected.id
+  vpc_id   = data.aws_vpc.default.id
   health_check {
     interval            = 30
     path                = "/"
