@@ -46,7 +46,7 @@ resource "aws_security_group" "app_sg" {
 }
  
 # Find default VPC
-data "aws_vpc" "selected"{
+data "aws_vpc" "default"{
     filter {
       name = "is-default"
       values = ["true"]
@@ -54,7 +54,7 @@ data "aws_vpc" "selected"{
 }
  
 # Find default subnets (first two)
-data "aws_subnets" "selected" {
+data "aws_subnets" "default" {
     filter {
       name = "vpc-id"
       values = [data.aws_vpc.default.id]
