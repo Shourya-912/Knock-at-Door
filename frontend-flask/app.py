@@ -21,7 +21,7 @@ def register():
     return render_template("register.html")
  
 @app.route("/customer/register", methods=["GET", "POST"])
-def cust_reg():
+def cust_reg(): 
     if request.method == "POST":
         # yaha form data capture hoga
         first_name = request.form["first_name"]
@@ -34,6 +34,11 @@ def cust_reg():
         return "Customer registered successfully!"
     
     return render_template("cust_reg.html")
+
+@app.route("/customer_home")
+def customer_home():
+    return render_template("customer_home.html")
+ 
 
 @app.route("/vendor/register", methods=["GET", "POST"])
 def vendor_reg():
@@ -48,6 +53,31 @@ def vendor_reg():
         return "Vendor registered successfully!"
     
     return render_template("vendor_reg.html")
+
+@app.route("/vendor/home")
+def vendor_home():
+    vendor_data = {
+        'name': 'Vendor Name',
+        'phone': '9876543210'
+    }
+    
+    locations = [
+        {'id': 1, 'locality': 'Society A', 'area': 'Downtown', 'city': 'Bhopal'},
+        {'id': 2, 'locality': 'Society B', 'area': 'Midtown', 'city': 'Bhopal'},
+        {'id': 3, 'locality': 'Society C', 'area': 'Uptown', 'city': 'Bhopal'}
+    ]
+    
+    items = [
+        {'id': 1, 'name': 'Plastic'},
+        {'id': 2, 'name': 'Paper'},
+        {'id': 3, 'name': 'Glass'}
+    ]
+    
+    return render_template('vendor_home.html',
+                         vendor_name=vendor_data['name'],
+                         vendor_phone=vendor_data['phone'],
+                         locations=locations,
+                         items=items)
  
 if __name__ == "__main__":
     app.run(host = '0.0.0.0', port = 5000, debug=True)
