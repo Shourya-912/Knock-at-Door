@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Home</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+  <!-- CSS from static folder -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/customer_home.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+
+</head>
+
+<body>
+
+  <!-- Animated 3D Background Shapes -->
+  <div class="bg-shape bg-shape1"></div>
+  <div class="bg-shape bg-shape2"></div>
+  <div class="bg-shape bg-shape3"></div>
+  <div class="bg-cube"></div>
+
+  <!-- Top Bar with Customer Info -->
+  <div class="topbar">
+    <button class="back-btn" type="button" onclick="window.location.href='{{ url_for('home') }}'">LOGOUT</button>
+    
+    <div class="customer-info">
+      <p class="name">{{ customer_name }}</p>
+      <p><i class="fa-solid fa-phone"></i> {{ customer_phone }}</p>
+      <p><i class="fa-solid fa-location-dot"></i> {{ customer_address }}</p>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <div class="section-title">Available Vendors</div>
+
+    <!-- Vendors List -->
+    {% if vendors %}
+      <div class="vendors-container">
+        {% for vendor in vendors %}
+          <div class="vendor-card">
+            <div class="vendor-name">{{ vendor.name }}</div>
+            <div class="vendor-detail">
+              <i class="fa-solid fa-phone"></i>
+              <span>{{ vendor.phone }}</span>
+            </div>
+            <div class="vendor-detail">
+              <i class="fa-solid fa-location-dot"></i>
+              <span>{{ vendor.city }}</span>
+            </div>
+            <div class="items">
+              <strong>Items:</strong> {{ vendor.items|join(', ') }}
+            </div>
+            <button class="action-btn" onclick="contactVendor('{{ vendor.id }}')">
+              <i class="fa-solid fa-envelope"></i> Contact
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="no-vendors">
+        <i class="fa-solid fa-inbox"></i>
+        <p>No vendors available at the moment</p>
+        <p style="font-size: 14px; margin-top: 10px; color: #666;">Please check back later!</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function contactVendor(vendorId) {
+      alert('Contacting vendor: ' + vendorId);
+      // Yaha aap API call kar sakte ho ya message bhej sakte ho
+    }
+  </script>
+
+</body>
+
+</html>

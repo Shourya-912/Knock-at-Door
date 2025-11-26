@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendor Home</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+  <!-- CSS from static folder -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vendor_home.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+
+</head>
+
+<body>
+    <!-- Animated 3D Background Shapes -->
+    <div class="bg-shape bg-shape1"></div>
+    <div class="bg-shape bg-shape2"></div>
+    <div class="bg-shape bg-shape3"></div>
+    <div class="bg-cube"></div>
+
+    <!-- Top Navigation Bar -->
+    <div class="topbar">
+    <div class="topbar-left">
+        <div class="vendor-info">
+        <p class="name">{{ vendor_name }}</p>
+        <p><i class="fa-solid fa-phone"></i> {{ vendor_phone }}</p>
+        </div>
+    </div>
+
+    <div class="topbar-right">
+        <!-- Locations Dropdown -->
+        <div class="locations-dropdown">
+        <button class="dropdown-btn" onclick="toggleDropdown()">
+            <i class="fa-solid fa-map-marker-alt"></i> Locations
+        </button>
+        <div class="dropdown-menu" id="dropdown-menu">
+            {% if locations %}
+            {% for location in locations %}
+                <div class="location-item">
+                <span class="location-name">{{ location.locality }} - {{ location.area }}, {{ location.city }}</span>
+                <button class="alert-btn" onclick="sendAlert('{{ location.id }}')">
+                    <i class="fa-solid fa-bell"></i> Alert
+                </button>
+                </div>
+            {% endfor %}
+            {% else %}
+            <div class="location-item">
+                <span style="color: #999;">No locations added</span>
+            </div>
+            {% endif %}
+        </div>
+        </div>
+
+        <!-- Logout Button -->
+        <button class="logout-btn" type="button" onclick="window.location.href='{{ url_for('home') }}'">
+        <i class="fa-solid fa-arrow-left"></i> LOGOUT
+        </button>
+    </div>
+    </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <div class="section-title">My Items</div>
+
+    <!-- Items List -->
+    {% if items %}
+      <div class="items-container">
+        {% for item in items %}
+          <div class="item-card">
+            <div class="item-icon">
+              <i class="fa-solid fa-box"></i>
+            </div>
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-desc">Item Status: <strong>Active</strong></div>
+            <button class="edit-btn" onclick="editItem('{{ item.id }}')">
+              <i class="fa-solid fa-edit"></i> Edit
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="no-items">
+        <i class="fa-solid fa-inbox"></i>
+        <p>No items uploaded yet</p>
+        <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Start by adding your first item</p>
+        <button class="add-item-btn" onclick="window.location.href='{{ url_for('vendor_reg') }}'">
+          <i class="fa-solid fa-plus"></i> Add Item
+        </button>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const dropdown = document.getElementById('dropdown-menu');
+      dropdown.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const dropdown = document.getElementById('dropdown-menu');
+      const dropdownBtn = document.querySelector('.dropdown-btn');
+      if (!event.target.closest('.locations-dropdown')) {
+        dropdown.classList.remove('show');
+      }
+    });
+
+    function sendAlert(locationId) {
+      alert('Alert sent for location: ' + locationId);
+      // Yaha aap API call kar sakte ho
+    }
+
+    function editItem(itemId) {
+      alert('Edit item: ' + itemId);
+      // Yaha aap item edit page par redirect kar sakte ho
+    }
+  </script>
+
+</body>
+
+</html>
