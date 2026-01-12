@@ -127,7 +127,7 @@ def vendor_reg():
                 if item_name:
                     items.append({"_id": ObjectId(), "name": item_name})
             
-            # item_extra[] से शुरू (dynamically added)
+            # item_extra[] starts (dynamically added)
             item_extras = request.form.getlist("item_extra[]")
             for item_name in item_extras:
                 if item_name.strip():
@@ -221,7 +221,7 @@ def login():
             print(f"✗ User not found: {phone}")
             return "Invalid phone or password"
 
-    return render_template("login.html")
+    return render_template("Login.html")
 
 # CUSTOMER HOME PAGE
 @app.route("/customer_home")
