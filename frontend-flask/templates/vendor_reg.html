@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register as Vendor</title>
+ 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+ 
+  <!-- CSS from static folder -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/intf_reg.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+</head>
+ 
+<body>
+ 
+  <!-- Animated 3D Background Shapes -->
+  <div class="bg-shape bg-shape1"></div>
+  <div class="bg-shape bg-shape2"></div>
+  <div class="bg-shape bg-shape3"></div>
+  <div class="bg-cube"></div>
+ 
+  <!-- Topbar -->
+  <div class="topbar">
+    <button class="back-btn" type="button" onclick="window.location.href='{{ url_for('register') }}'">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <span class="topbar-title">Register as Vendor</span>
+  </div>
+ 
+  <!-- Registration Form -->
+  <form class="form-container" method="POST" action="{{ url_for('vendor_reg') }}">
+    <div class="form-title">Register yourself here</div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-user input-icon"></i>
+      <input class="form-input" type="text" name="first_name" placeholder="* First Name" required>
+      <input class="form-input" type="text" name="last_name" placeholder="* Last Name" required>
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-phone input-icon"></i>
+      <input class="form-input" type="text" name="phone" placeholder="* Phone No." required>
+      <input class="form-input" type="text" name="aadhar" placeholder="* Aadhar No." required>
+    </div>
+ 
+    <!-- Vendor items -->
+    <div class="input-row" id="item-fields">
+      <i class="fa-solid fa-box input-icon"></i>
+      <input class="form-input" type="text" name="item1" placeholder="* Item 1" required>
+      <input class="form-input" type="text" name="item2" placeholder="Item 2">
+    </div>
+    <button type="button" class="add-item-btn" onclick="addItemField()">+ Add Item</button>
+ 
+    <!-- Vendor localities -->
+    <div class="input-row" id="locality-fields">
+      <i class="fa-solid fa-map-marker-alt input-icon"></i>
+      <input class="form-input" type="text" name="locality1" placeholder="* Locality/Society" required>
+    </div>
+    <button type="button" class="add-locality-btn" onclick="addLocalityField()">+ Add Locality</button>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-location-dot input-icon"></i>
+      <input class="form-input" type="text" name="area" placeholder="* Area" required>
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-city input-icon"></i>
+      <input class="form-input" type="text" name="city" placeholder="* City (e.g. Bhopal)" required>
+      <input class="form-input" type="text" name="pincode" placeholder="Pincode">
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-key input-icon"></i>
+      <input class="form-input" type="password" name="password" placeholder="* Password" required>
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-lock input-icon"></i>
+      <input class="form-input" type="password" name="confirm_password" placeholder="* Confirm Password" required>
+    </div>
+ 
+    <button class="submit-btn" type="submit">SUBMIT</button>
+  </form>
+ 
+  <!-- JS for dynamic fields -->
+  <script>
+    function addItemField() {
+      const itemFields = document.getElementById("item-fields");
+      const inputRow = document.createElement("div");
+      inputRow.className = "input-row";
+      inputRow.innerHTML = `
+        <i class="fa-solid fa-box input-icon"></i>
+        <input class="form-input" type="text" name="item_extra[]" placeholder="Extra Item">
+      `;
+      itemFields.parentNode.insertBefore(inputRow, itemFields.nextSibling);
+    }
+ 
+    function addLocalityField() {
+      const localityFields = document.getElementById("locality-fields");
+      const inputRow = document.createElement("div");
+      inputRow.className = "input-row";
+      inputRow.innerHTML = `
+        <i class="fa-solid fa-map-marker-alt input-icon"></i>
+        <input class="form-input" type="text" name="locality_extra[]" placeholder="Extra Locality/Society">
+      `;
+      localityFields.parentNode.insertBefore(inputRow, localityFields.nextSibling);
+    }
+  </script>
+ 
+</body>
+</html>

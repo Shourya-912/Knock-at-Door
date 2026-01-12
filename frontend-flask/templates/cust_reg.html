@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register as Customer</title>
+ 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+ 
+  <!-- CSS from static folder -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/intf_reg.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+</head>
+ 
+<body>
+ 
+  <!-- Animated 3D Background Shapes -->
+  <div class="bg-shape bg-shape1"></div>
+  <div class="bg-shape bg-shape2"></div>
+  <div class="bg-shape bg-shape3"></div>
+  <div class="bg-cube"></div>
+ 
+  <!-- Topbar -->
+  <div class="topbar">
+    <button class="back-btn" type="button" onclick="window.location.href='{{ url_for('register') }}'">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <span class="topbar-title">Register as Customer</span>
+  </div>
+ 
+  <!-- Registration Form -->
+  <form class="form-container" method="POST" action="{{ url_for('cust_reg') }}">
+    <div class="form-title">Register yourself here</div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-user input-icon"></i>
+      <input class="form-input" type="text" name="first_name" placeholder="* First Name" required>
+      <input class="form-input" type="text" name="last_name" placeholder="* Last Name" required>
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-phone input-icon"></i>
+      <input class="form-input" type="text" name="phone" placeholder="* Phone No." required>
+      <input class="form-input" type="text" name="aadhar" placeholder="Aadhar No.">
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-map-marker-alt input-icon"></i>
+      <input class="form-input" type="text" name="house_no" placeholder="House No.">
+      <input class="form-input" type="text" name="locality" placeholder="* Locality/Area" required>
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-location-dot input-icon"></i>
+      <input class="form-input" type="text" name="state" placeholder="* State" required>
+      <input class="form-input" type="text" name="pincode" placeholder="Pincode">
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-key input-icon"></i>
+      <input class="form-input" type="password" name="password" placeholder="* Password" required>
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-lock input-icon"></i>
+      <input class="form-input" type="password" name="confirm_password" placeholder="* Confirm Password" required>
+    </div>
+ 
+    <button class="submit-btn" type="submit">REGISTER AS CUSTOMER</button>
+  </form>
+ 
+</body>
+</html>

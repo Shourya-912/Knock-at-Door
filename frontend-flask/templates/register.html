@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+ 
+  <!-- Font Awesome CDN for chevron icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+ 
+  <!-- CSS from static folder -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+</head>
+ 
+<body>
+ 
+  <!-- Animated 3D Background Shapes -->
+  <div class="bg-shape bg-shape1"></div>
+  <div class="bg-shape bg-shape2"></div>
+  <div class="bg-shape bg-shape3"></div>
+  <div class="bg-cube"></div>
+ 
+  <div class="register-container">
+ 
+    <!-- Back Button -->
+    <button class="back-btn" type="button" onclick="window.location.href='{{ url_for('home') }}'">
+      <i class="fa-solid fa-chevron-left back-btn-icon"></i>
+    </button>
+ 
+    <!-- Register Image -->
+    <img src="{{ url_for('static', filename='images/register.png') }}" alt="Register" class="register-img">
+ 
+    <!-- Title -->
+    <div class="register-title">Hey!! <br> Register yourself here</div>
+ 
+    <!-- Buttons -->
+    <button class="btn" onclick="window.location.href='{{ url_for('cust_reg') }}'">As Customer</button>
+    <button class="btn" onclick="window.location.href='{{ url_for('vendor_reg') }}'">As Vendor</button>
+
+  </div>
+ 
+</body>
+</html>
