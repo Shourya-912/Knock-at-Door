@@ -26,7 +26,7 @@ sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinu
 echo "==== installing Terraform ===="
 sudo yum -y install terraform
 terraform -v
-cd Knock-at-Door/terraform
+cd terraform
 
 echo "==== running terraform ===="
 terraform init
