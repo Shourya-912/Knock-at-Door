@@ -3,8 +3,8 @@
 # echo "==== Cloning your repo ===="
 # git clone https://github.com/Shourya-912/Knock-at-Door.git
 
-# echo "==== changing directory ===="
-# cd Knock-at-Door/frontend-flask
+echo "==== changing directory ===="
+cd frontend-flask
  
 echo "==== Installing python3 ===="
 sudo yum install python3-pip -y
