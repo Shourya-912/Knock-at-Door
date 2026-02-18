@@ -42,8 +42,9 @@
             {% for location in locations %}
                 <div class="location-item">
                 <span class="location-name">{{ location.locality }} - {{ location.area }}, {{ location.city }}</span>
-                <button class="alert-btn" onclick="sendAlert('{{ location.id }}')">
-                    <i class="fa-solid fa-bell"></i> Alert
+                <!-- Locations Dropdown में हर location के लिए alert button -->
+                <button class="alert-btn" onclick="sendAlert('{{ location.locality }}', '{{ location.area }}', '{{ location.city }}')">
+                  <i class="fa-solid fa-bell"></i> Alert
                 </button>
                 </div>
             {% endfor %}
@@ -108,15 +109,29 @@
       }
     });
 
-    function sendAlert(locationId) {
-      alert('Alert sent for location: ' + locationId);
-      // Yaha aap API call kar sakte ho
-    }
-
     function editItem(itemId) {
       alert('Edit item: ' + itemId);
-      // Yaha aap item edit page par redirect kar sakte ho
     }
+
+
+    function sendAlert(locality, area, city) {
+      const formData = new FormData();
+      formData.append('locality', locality);
+      formData.append('area', area);
+      formData.append('city', city);
+      
+      fetch('/send_alert', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message);
+        console.log(data);
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
   </script>
 
 </body>
