@@ -12,7 +12,7 @@
   <!-- CSS from static folder -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/customer_home.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
-
+  
 </head>
 
 <body>
@@ -22,17 +22,41 @@
     <div class="bg-shape bg-shape3"></div>
     <div class="bg-cube"></div>
 
+      <!-- Notification Pop-up -->
+  <div id="notification-popup" style="display: none; position: fixed; top: 20px; right: 20px; background: #238915; color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 1000; max-width: 350px; animation: slideIn 0.3s;">
+    <button onclick="closeNotification()" style="position: absolute; top: 8px; right: 8px; background: none; border: none; color: white; cursor: pointer; font-size: 20px;">×</button>
+    <h3 id="alert-vendor" style="margin-bottom: 8px; font-size: 18px;"></h3>
+    <p id="alert-message" style="margin: 4px 0; font-size: 14px;"></p>
+    <p id="alert-items" style="margin: 4px 0; font-size: 13px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;"></p>
+    <p id="alert-phone" style="margin-top: 8px; font-weight: bold;"><i class="fa-solid fa-phone"></i> <span id="phone-number"></span></p>
+    <button onclick="viewAlerts()" style="width: 100%; margin-top: 12px; padding: 8px; background: white; color: #238915; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">View All Alerts</button>
+  </div>
+
+  <style>
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+
   <!-- Top Bar with Customer Info -->
-  <div class="topbar">
-    <button class="back-btn" type="button" onclick="window.location.href='{{ url_for('logout') }}'">
-      <i class="fa-solid fa-arrow-left"></i> LOGOUT
-    </button>  
-    
+  <div class="topbar">    
     <div class="customer-info">
       <p class="name">{{ customer_name }}</p>
       <p><i class="fa-solid fa-phone"></i> {{ customer_phone }}</p>
       <p><i class="fa-solid fa-location-dot"></i> {{ customer_address }}</p>
     </div>
+
+    <button class="back-btn" type="button" onclick="window.location.href='{{ url_for('logout') }}'">
+      <i class="fa-solid fa-arrow-left"></i> LOGOUT
+    </button>  
+
   </div>
 
   <!-- Main Container -->
@@ -76,7 +100,45 @@
     {% endif %}
   </div>
 
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script>
+
+    // WebSocket Connection
+    const socket = io();
+    
+    socket.on('connect', function() {
+      console.log('✓ Connected to server');
+    });
+    
+    // Listen for new alerts
+    socket.on('new_alert', function(data) {
+      console.log('✓ New alert received:', data);
+      showNotification(data);
+    });
+    
+    function showNotification(data) {
+      const popup = document.getElementById('notification-popup');
+      document.getElementById('alert-vendor').textContent = data.vendor_name;
+      document.getElementById('alert-message').textContent = `Available in ${data.locality}, ${data.city}`;
+      document.getElementById('alert-items').textContent = `Items: ${data.vendor_items.join(', ')}`;
+      document.getElementById('phone-number').textContent = data.vendor_phone;
+      
+      popup.style.display = 'block';
+      
+    //   // Auto-hide after 10 seconds
+    //   setTimeout(() => {
+    //     popup.style.display = 'none';
+    //   }, 10000);
+    // }
+    
+    function closeNotification() {
+      document.getElementById('notification-popup').style.display = 'none';
+    }
+    
+    function viewAlerts() {
+      window.location.href = '{{ url_for("get_alerts") }}';
+    }
+    
     function contactVendor(vendorId, vendorName) {
       alert('Contacting vendor: ' + vendorName);
       // TODO: Implement contact functionality
