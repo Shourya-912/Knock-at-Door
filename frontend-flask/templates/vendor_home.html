@@ -65,6 +65,29 @@
     </div>
     </div>
 
+    <!-- Customer Wait Popup Modal -->
+    <div id="customer-wait-popup" style="display: none; position: fixed; top: 20px; right: 20px; background: #FF6B35; color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); z-index: 1000; max-width: 350px; animation: slideIn 0.3s;">
+      <h3 id="customer-name-title" style="margin-bottom: 8px; font-size: 18px;"></h3>
+      <p id="customer-phone-display" style="margin: 4px 0; font-size: 14px; font-weight: bold;"><i class="fa-solid fa-phone"></i> <span></span></p>
+      <p id="customer-message" style="margin: 8px 0; font-size: 14px; background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px;"></p>
+      <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <button onclick="closeCustomerWaitPopup()" style="flex: 1; padding: 8px; background: white; color: #FF6B35; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">OK</button>
+      </div>
+    </div>
+
+    <style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
+
   <!-- Main Container -->
   <div class="main-container">
     <div class="section-title">My Items</div>
@@ -134,11 +157,19 @@
     });
     
     function showCustomerWaitPopup(data) {
-      const message = `⏰ ${data.customer_name}\n📞 ${data.customer_phone}\n\n${data.message}`;
-      alert(message);
-      // Play sound if available
+      const popup = document.getElementById('customer-wait-popup');
+      document.getElementById('customer-name-title').textContent = `⏰ ${data.customer_name}`;
+      document.getElementById('customer-phone-display').innerHTML = `<i class="fa-solid fa-phone"></i> <span>${data.customer_phone}</span>`;
+      document.getElementById('customer-message').textContent = data.message;
+      
+      popup.style.display = 'block';
       playNotificationSound();
     }
+    
+    function closeCustomerWaitPopup() {
+      document.getElementById('customer-wait-popup').style.display = 'none';
+    }
+    
     
     function playNotificationSound() {
       // Simple beep using Web Audio API
