@@ -24,12 +24,14 @@
 
       <!-- Notification Pop-up -->
   <div id="notification-popup" style="display: none; position: fixed; top: 20px; right: 20px; background: #238915; color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 1000; max-width: 350px; animation: slideIn 0.3s;">
-    <button onclick="closeNotification()" style="position: absolute; top: 8px; right: 8px; background: none; border: none; color: white; cursor: pointer; font-size: 20px;">×</button>
     <h3 id="alert-vendor" style="margin-bottom: 8px; font-size: 18px;"></h3>
     <p id="alert-message" style="margin: 4px 0; font-size: 14px;"></p>
-    <p id="alert-items" style="margin: 4px 0; font-size: 13px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px;"></p>
+    <p id="alert-items" style="margin: 4px 0; font-size: 13px; background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px;"></p>
     <p id="alert-phone" style="margin-top: 8px; font-weight: bold;"><i class="fa-solid fa-phone"></i> <span id="phone-number"></span></p>
-    <button onclick="viewAlerts()" style="width: 100%; margin-top: 12px; padding: 8px; background: white; color: #238915; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">View All Alerts</button>
+    <div style="display: flex; gap: 8px; margin-top: 12px;">
+      <button onclick="dismissAlert()" style="flex: 1; padding: 8px; background: #ff4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Dismiss</button>
+      <button onclick="waitForVendor()" style="flex: 1; padding: 8px; background: white; color: #238915; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Wait</button>
+    </div>
   </div>
 
   <style>
@@ -102,6 +104,7 @@
 
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script>
+    let currentAlertData = {};
 
     // WebSocket Connection - Register customer on connect
     const socket = io();
@@ -118,17 +121,80 @@
     // Listen for new alerts
     socket.on('new_alert', function(data) {
       console.log('✓ New alert received:', data);
+      currentAlertData = data;
       showNotification(data);
     });
     
     function showNotification(data) {
       const popup = document.getElementById('notification-popup');
       document.getElementById('alert-vendor').textContent = data.vendor_name;
-      document.getElementById('alert-message').textContent = `Available in ${data.locality}, ${data.city}`;
-      document.getElementById('alert-items').textContent = `Items: ${data.vendor_items.join(', ')}`;
+      document.getElementById('alert-message').textContent = `📍 ${data.locality}, ${data.city}`;
+      
+      // Handle vendor_items - could be array or string
+      let itemsText = '';
+      if (Array.isArray(data.vendor_items)) {
+        itemsText = data.vendor_items.join(', ');
+      } else if (data.vendor_items) {
+        itemsText = data.vendor_items;
+      } else {
+        itemsText = 'No items';
+      }
+      document.getElementById('alert-items').textContent = `📦 Items: ${itemsText}`;
       document.getElementById('phone-number').textContent = data.vendor_phone;
       
+      console.log('Alert data:', data);
       popup.style.display = 'block';
+    }
+    
+    function dismissAlert() {
+      const popup = document.getElementById('notification-popup');
+      popup.style.display = 'none';
+      
+      fetch('/dismiss_alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          alert_id: currentAlertData.alert_id
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('✓ Alert dismissed:', data);
+        alert('Alert dismissed successfully.');
+      })
+      .catch(error => console.error('Error dismissing alert:', error));
+    }
+    
+    function waitForVendor() {
+      const popup = document.getElementById('notification-popup');
+      popup.style.display = 'none';
+      
+      console.log('Sending wait notification:', {
+        alert_id: currentAlertData.alert_id,
+        vendor_id: currentAlertData.vendor_id
+      });
+      
+      fetch('/customer_wait', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          alert_id: currentAlertData.alert_id,
+          vendor_id: currentAlertData.vendor_id
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('✓ Vendor notified:', data);
+        alert('Vendor has been notified! Please wait.');
+      })
+      .catch(error => console.error('Error notifying vendor:', error));
     }
     
     function closeNotification() {
@@ -141,7 +207,6 @@
     
     function contactVendor(vendorId, vendorName) {
       alert('Contacting vendor: ' + vendorName);
-      // TODO: Implement contact functionality
     }
   </script>
 
