@@ -103,11 +103,16 @@
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script>
 
-    // WebSocket Connection
+    // WebSocket Connection - Register customer on connect
     const socket = io();
+    const customerId = '{{ session.get("user_id") }}';
     
     socket.on('connect', function() {
       console.log('✓ Connected to server');
+      if (customerId) {
+        socket.emit('register_user', {user_id: customerId});
+        console.log('✓ Customer registered:', customerId);
+      }
     });
     
     // Listen for new alerts
@@ -124,12 +129,7 @@
       document.getElementById('phone-number').textContent = data.vendor_phone;
       
       popup.style.display = 'block';
-      
-    //   // Auto-hide after 10 seconds
-    //   setTimeout(() => {
-    //     popup.style.display = 'none';
-    //   }, 10000);
-    // }
+    }
     
     function closeNotification() {
       document.getElementById('notification-popup').style.display = 'none';
