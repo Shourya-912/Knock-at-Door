@@ -382,18 +382,22 @@ def send_alert():
             "status": "active",
             "read": False
         }
-        alerts_col.insert_one(alert)
+        alert_id = alerts_col.insert_one(alert).inserted_id
         alerts_created += 1
 
         # Send real-time WebSocket notification to customer
-        socketio.emit('new_alert', {
+        emit_data = {
+            "alert_id": str(alert_id),
+            "vendor_id": session["user_id"],
             "vendor_name": alert["vendor_name"],
             "vendor_phone": alert["vendor_phone"],
             "vendor_items": alert["vendor_items"],
             "locality": alert["locality"],
             "city": alert["city"],
             "message": alert["message"]
-        }, room=customer["user_id"])
+        }
+        socketio.emit('new_alert', emit_data, room=customer["user_id"])
+        print(f"  → Alert {alert_id} sent to customer {customer['user_id']} ({customer['first_name']} {customer['last_name']})")
     
     print(f"✓ Alert sent to {alerts_created} customers in {locality}, {city}")
     return jsonify({
@@ -407,18 +411,31 @@ def logout():
     session.clear()
     return redirect(url_for("home"))
 
+# Dictionary to map user_id to socket IDs
+user_socket_map = {}
+
 @socketio.on('connect')
 def handle_connect():
-    if "user_id" in session:
-        join_room(session["user_id"])
-        print(f"✓ User {session['user_id']} connected")
+    print(f"✓ New connection: {request.sid}")
+
+@socketio.on('register_user')
+def handle_register_user(data):
+    user_id = data.get('user_id')
+    if user_id:
+        user_socket_map[user_id] = request.sid
+        join_room(user_id)
+        print(f"✓ User {user_id} registered with socket {request.sid}")
+        return {"status": "registered", "user_id": user_id}
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    if "user_id" in session:
-        leave_room(session["user_id"])
-        print(f"✗ User {session['user_id']} disconnected")
+    # Find and remove user from map
+    for user_id, sid in list(user_socket_map.items()):
+        if sid == request.sid:
+            del user_socket_map[user_id]
+            leave_room(user_id)
+            print(f"✗ User {user_id} disconnected")
+            break
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
     socketio.run(app, host="0.0.0.0", debug=True)
