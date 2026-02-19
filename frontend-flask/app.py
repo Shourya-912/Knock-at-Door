@@ -350,9 +350,10 @@ def send_alert():
     area = request.form.get("area")
     city = request.form.get("city")
     
-    vendor = users_col.find_one({"_id": ObjectId(session["user_id"])})
+    vendor = vendors_col.find_one({"user_id": session["user_id"]})
+    user = users_col.find_one({"_id": ObjectId(session["user_id"])})
     
-    if not vendor:
+    if not vendor or not user:
         return jsonify({"error": "Vendor not found"}), 404
     
     # Find all customers in this locality and city
@@ -369,8 +370,8 @@ def send_alert():
     for customer in customers_in_locality:
         alert = {
             "vendor_id": session["user_id"],
-            "vendor_name": f"{vendor['first_name']} {vendor['last_name']}",
-            "vendor_phone": vendor["phone"],
+            "vendor_name": f"{user['first_name']} {user['last_name']}",
+            "vendor_phone": user["phone"],
             "vendor_items": [item["name"] for item in vendor.get("items", [])],
             "customer_id": customer["user_id"],
             "customer_name": f"{customer['first_name']} {customer['last_name']}",
@@ -405,11 +406,83 @@ def send_alert():
         "customers_notified": alerts_created
     })
 
+# DISMISS ALERT (Customer)
+@app.route("/dismiss_alert", methods=["POST"])
+def dismiss_alert():
+    if "user_id" not in session or session.get("role") != "customer":
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    alert_id = data.get("alert_id")
+    
+    if not alert_id:
+        return jsonify({"error": "Alert ID required"}), 400
+    
+    try:
+        result = alerts_col.update_one(
+            {"_id": ObjectId(alert_id)},
+            {"$set": {"status": "dismissed"}}
+        )
+        print(f"✓ Alert {alert_id} dismissed by customer {session['user_id']}")
+        return jsonify({"message": "Alert dismissed", "modified_count": result.modified_count})
+    except Exception as e:
+        print(f"✗ Error dismissing alert: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+# CUSTOMER WAIT NOTIFICATION (Customer)
+@app.route("/customer_wait", methods=["POST"])
+def customer_wait():
+    print(f"DEBUG: Session user_id: {session.get('user_id')}, Role: {session.get('role')}")
+    
+    if "user_id" not in session or session.get("role") != "customer":
+        print(f"DEBUG: Authorization failed - Session: {dict(session)}")
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    alert_id = data.get("alert_id")
+    vendor_id = data.get("vendor_id")
+    
+    print(f"DEBUG: Alert ID: {alert_id}, Vendor ID: {vendor_id}")
+    
+    if not alert_id or not vendor_id:
+        return jsonify({"error": "Alert ID and Vendor ID required"}), 400
+    
+    try:
+        # Get customer info
+        customer = customers_col.find_one({"user_id": session["user_id"]})
+        if not customer:
+            return jsonify({"error": "Customer not found"}), 404
+        
+        # Update alert status to 'waiting'
+        alerts_col.update_one(
+            {"_id": ObjectId(alert_id)},
+            {"$set": {"status": "waiting"}}
+        )
+        
+        # Send notification to vendor via WebSocket
+        emit_data = {
+            "customer_name": f"{customer['first_name']} {customer['last_name']}",
+            "customer_phone": customer["phone"],
+            "message": "Please wait, I am coming!"
+        }
+        socketio.emit('customer_wait', emit_data, room=vendor_id)
+        
+        print(f"✓ Customer {session['user_id']} is waiting for vendor {vendor_id}")
+        print(f"  Emit data: {emit_data}")
+        return jsonify({"message": "Vendor notified", "status": "waiting"})
+    
+    except Exception as e:
+        print(f"✗ Error notifying vendor: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 # LOGOUT
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("home"))
+
 
 # Dictionary to map user_id to socket IDs
 user_socket_map = {}
