@@ -1,6 +1,6 @@
-# 🚪 Knock at Door - Farm to Table Marketplace
+# 🚪 Knock at Door - Local Vendor Marketplace
 
-A modern web application that connects **vendors** (farmers, sellers) with **customers** (buyers) in their locality. Vendors can manage their items with photos and prices, and customers can browse available items in real-time with instant notifications.
+A modern web application that connects **vendors** (street vendors, small business owners, sellers) with **customers** (buyers) in their locality. Vendors can manage their products with photos and prices, and customers can browse available items in real-time with instant notifications.
 
 ---
 
@@ -26,10 +26,10 @@ A modern web application that connects **vendors** (farmers, sellers) with **cus
 
 **Knock at Door** is a locality-based marketplace that enables:
 
-- **Vendors**: Register, manage items (with photos and prices), manage their profile, and send alerts to customers
-- **Customers**: Browse vendors, view vendor items with photos and prices, receive real-time notifications, and respond to vendor alerts
+- **Vendors**: Register, manage products (with photos and prices), manage their profile, and send alerts to customers in different locations
+- **Customers**: Browse vendors in their area, view vendor products with photos and prices, receive real-time notifications, and respond to vendor alerts
 
-This application bridges the gap between local farmers/sellers and customers by providing a digital platform for item discovery and communication.
+This application bridges the gap between local vendors and customers by providing a digital platform for product discovery and communication.
 
 ---
 
