@@ -31,6 +31,7 @@
         <div class="vendor-info">
         <p class="name">{{ vendor_name }}</p>
         <p><i class="fa-solid fa-phone"></i> {{ vendor_phone }}</p>
+        <p><i class="fa-solid fa-location-dot"></i> {{ vendor_address }}</p>
         </div>
     </div>
 
@@ -90,7 +91,12 @@
 
   <!-- Main Container -->
   <div class="main-container">
-    <div class="section-title">My Items</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div class="section-title">My Items</div>
+      <button class="add-new-item-btn" onclick="openAddItemModal()" style="background: #238915; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-plus"></i> Add New Item
+      </button>
+    </div>
 
     <!-- Items List -->
     {% if items %}
@@ -98,13 +104,30 @@
         {% for item in items %}
           <div class="item-card">
             <div class="item-icon">
-              <i class="fa-solid fa-box"></i>
+              {% if item.photo %}
+                <img src="/{{ item.photo }}" alt="{{ item.name }}">
+              {% else %}
+                <i class="fa-solid fa-box"></i>
+              {% endif %}
             </div>
             <div class="item-name">{{ item.name }}</div>
-            <div class="item-desc">Item Status: <strong>Active</strong></div>
-            <button class="edit-btn" onclick="editItem('{{ item.id }}')">
-              <i class="fa-solid fa-edit"></i> Edit
-            </button>
+            <div class="item-desc">
+              {% if item.price %}
+                <strong>₹ {{ item.price }}</strong>
+              {% else %}
+                Item Status: <strong>Active</strong>
+              {% endif %}
+            </div>
+            <div style="display: flex; margin-top: 5px;">
+              <button class="edit-btn" onclick="editItem('{{ item.id }}')" style="flex: 1;">
+                <i class="fa-solid fa-edit"></i> Edit
+              </button>
+            </div>
+            <div style="display: flex; margin-top: 7px;">
+              <button class="delete-btn" onclick="deleteItem('{{ item.id }}', '{{ item.name }}')" style="flex: 1; background: linear-gradient(135deg, #ff4444 60%, #ff8888 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; padding: 8px; transition: all 0.3s;">
+                <i class="fa-solid fa-trash"></i> Delete
+              </button>
+            </div>
           </div>
         {% endfor %}
       </div>
@@ -113,11 +136,87 @@
         <i class="fa-solid fa-inbox"></i>
         <p>No items uploaded yet</p>
         <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Start by adding your first item</p>
-        <button class="add-item-btn" onclick="window.location.href='{{ url_for('vendor_reg') }}'">
+        <button class="add-item-btn" onclick="openAddItemModal()" style="background: #238915; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
           <i class="fa-solid fa-plus"></i> Add Item
         </button>
       </div>
     {% endif %}
+  </div>
+
+  <!-- Add Item Modal -->
+  <div id="add-item-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; overflow-y: auto;">
+    <div style="background: white; margin: 40px auto; padding: 30px; border-radius: 12px; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0; font-size: 22px; color: #333;">Add New Item</h2>
+        <button onclick="closeAddItemModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+      </div>
+      
+      <form id="add-item-form" method="POST" enctype="multipart/form-data" onsubmit="submitAddItemForm(event)">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">Item Photo</label>
+          <div style="border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 10px;">
+            <img id="add-item-photo-preview" src="" alt="Item Photo" style="max-width: 100%; max-height: 200px; border-radius: 8px; display: none;">
+            <div id="add-item-no-photo" style="color: #999; font-size: 14px;"><i class="fa-solid fa-cloud-arrow-up"></i> Click to upload photo</div>
+          </div>
+          <input type="file" id="add-item-photo" name="item_photo" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px;" required>
+          <small style="color: #666; display: block; margin-top: 5px;">PNG, JPG, JPEG, GIF</small>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">Item Name</label>
+          <input type="text" id="add-item-name" name="item_name" placeholder="e.g., Tomato, Potato" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" required>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">Item Price</label>
+          <input type="text" id="add-item-price" name="item_price" placeholder="e.g., 100, 250/kg, 50 per piece" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" required>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" style="flex: 1; padding: 12px; background: #238915; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;">Add Item</button>
+          <button type="button" onclick="closeAddItemModal()" style="flex: 1; padding: 12px; background: #ddd; color: #333; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Item Modal -->
+  <div id="edit-item-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; overflow-y: auto;">
+    <div style="background: white; margin: 40px auto; padding: 30px; border-radius: 12px; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0; font-size: 22px; color: #333;">Edit Item</h2>
+        <button onclick="closeEditModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+      </div>
+      
+      <form id="edit-item-form" method="POST" enctype="multipart/form-data" onsubmit="submitEditForm(event)">
+        <input type="hidden" id="edit-item-id" name="item_id" value="">
+        
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">Item Photo</label>
+          <div style="border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 10px;">
+            <img id="edit-item-photo-preview" src="" alt="Item Photo" style="max-width: 100%; max-height: 200px; border-radius: 8px; display: none;">
+            <div id="edit-item-no-photo" style="color: #999; font-size: 14px;">No photo uploaded</div>
+          </div>
+          <input type="file" id="edit-item-photo" name="item_photo" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+          <small style="color: #666; display: block; margin-top: 5px;">PNG, JPG, JPEG, GIF (Optional - leave blank to keep current photo)</small>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">Item Name</label>
+          <input type="text" id="edit-item-name" name="item_name" placeholder="Enter item name" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" required>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">Item Price</label>
+          <input type="text" id="edit-item-price" name="item_price" placeholder="e.g., 100, 250 per kg, 50/piece" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" required>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" style="flex: 1; padding: 12px; background: #238915; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;">Save Changes</button>
+          <button type="button" onclick="closeEditModal()" style="flex: 1; padding: 12px; background: #ddd; color: #333; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;">Cancel</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script>
@@ -136,24 +235,213 @@
     });
 
     function editItem(itemId) {
-      alert('Edit item: ' + itemId);
+      // Get the item data from the item card
+      const itemCard = event.target.closest('.item-card');
+      const itemName = itemCard.querySelector('.item-name').textContent;
+      const itemPrice = itemCard.querySelector('.item-desc').textContent.replace('₹ ', '').trim();
+      const photoImg = itemCard.querySelector('.item-icon img');
+      const photoSrc = photoImg ? photoImg.getAttribute('src') : '';
+      
+      // Populate the edit form
+      document.getElementById('edit-item-id').value = itemId;
+      document.getElementById('edit-item-name').value = itemName;
+      document.getElementById('edit-item-price').value = itemPrice;
+      
+      // Show photo preview if exists
+      if (photoSrc) {
+        const photoPreview = document.getElementById('edit-item-photo-preview');
+        photoPreview.src = photoSrc;
+        photoPreview.style.display = 'block';
+        document.getElementById('edit-item-no-photo').style.display = 'none';
+      }
+      
+      // Open modal
+      document.getElementById('edit-item-modal').style.display = 'block';
     }
+
+    function deleteItem(itemId, itemName) {
+      if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) {
+        return;
+      }
+      
+      fetch('/delete_item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ item_id: itemId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Item deleted successfully!');
+          location.reload();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting item');
+      });
+    }
+
+
+    function closeEditModal() {
+      document.getElementById('edit-item-modal').style.display = 'none';
+      document.getElementById('edit-item-form').reset();
+      document.getElementById('edit-item-photo-preview').style.display = 'none';
+      document.getElementById('edit-item-no-photo').style.display = 'block';
+    }
+
+    function submitEditForm(event) {
+      event.preventDefault();
+      const itemId = document.getElementById('edit-item-id').value;
+      const itemName = document.getElementById('edit-item-name').value;
+      const itemPrice = document.getElementById('edit-item-price').value;
+      const photoFile = document.getElementById('edit-item-photo').files[0];
+      
+      const formData = new FormData();
+      formData.append('item_id', itemId);
+      formData.append('item_name', itemName);
+      formData.append('item_price', itemPrice);
+      if (photoFile) {
+        formData.append('item_photo', photoFile);
+      }
+      
+      fetch('/edit_item', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Item updated successfully!');
+          closeEditModal();
+          location.reload();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating item');
+      });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('edit-item-modal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeEditModal();
+      }
+    });
+
+    // Handle photo file input change
+    document.getElementById('edit-item-photo').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoPreview = document.getElementById('edit-item-photo-preview');
+          photoPreview.src = e.target.result;
+          photoPreview.style.display = 'block';
+          document.getElementById('edit-item-no-photo').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Add Item Modal Functions
+    function openAddItemModal() {
+      document.getElementById('add-item-modal').style.display = 'block';
+    }
+
+    function closeAddItemModal() {
+      document.getElementById('add-item-modal').style.display = 'none';
+      document.getElementById('add-item-form').reset();
+      document.getElementById('add-item-photo-preview').style.display = 'none';
+      document.getElementById('add-item-no-photo').style.display = 'block';
+    }
+
+    function submitAddItemForm(event) {
+      event.preventDefault();
+      const itemName = document.getElementById('add-item-name').value;
+      const itemPrice = document.getElementById('add-item-price').value;
+      const photoFile = document.getElementById('add-item-photo').files[0];
+      
+      if (!photoFile) {
+        alert('Please select a photo');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('item_name', itemName);
+      formData.append('item_price', itemPrice);
+      formData.append('item_photo', photoFile);
+      
+      fetch('/add_item_loggedin', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Item added successfully!');
+          closeAddItemModal();
+          location.reload();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding item');
+      });
+    }
+
+    // Close modals when clicking outside
+    document.getElementById('add-item-modal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeAddItemModal();
+      }
+    });
+
+    // Handle add item photo file input change
+    document.getElementById('add-item-photo').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoPreview = document.getElementById('add-item-photo-preview');
+          photoPreview.src = e.target.result;
+          photoPreview.style.display = 'block';
+          document.getElementById('add-item-no-photo').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
     // WebSocket for vendor wait notifications
     const socket = io();
     
     socket.on('connect', function() {
-      console.log('✓ Vendor connected');
+      console.log('✓ Vendor socket connected with ID:', socket.id);
       const vendorId = '{{ session.get("user_id") }}';
       if (vendorId) {
+        console.log('Registering vendor with user_id:', vendorId);
         socket.emit('register_user', {user_id: vendorId});
         console.log('✓ Vendor registered:', vendorId);
+      } else {
+        console.error('✗ Vendor user_id not found in session');
       }
     });
     
     socket.on('customer_wait', function(data) {
       console.log('✓ Customer wait notification:', data);
       showCustomerWaitPopup(data);
+    });
+    
+    socket.on('disconnect', function() {
+      console.log('✗ Vendor socket disconnected');
     });
     
     function showCustomerWaitPopup(data) {
