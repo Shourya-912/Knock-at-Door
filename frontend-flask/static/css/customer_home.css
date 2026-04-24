@@ -14,7 +14,7 @@
     /* Top Bar - Customer Info */
     .topbar {
         display: flex;
-        justify-content: flex-end;  /* Change from space-between to flex-end */
+        justify-content: space-between;
         align-items: center;
         background: whitesmoke;
         /* border-radius: 12px; */
@@ -33,17 +33,35 @@
         cursor: pointer;
         font-size: 14px;
         transition: background 0.3s;
-        order: 2;  
     }
 
     .topbar .back-btn:hover {
       background: #0e5704;
     }
 
+    .topbar .alerts-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: bold;
+    }
+
+    .topbar .alerts-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
     .customer-info {
       flex: 1;
       margin-left: 16px;
-      order: 1
     }
 
     .customer-info p {
