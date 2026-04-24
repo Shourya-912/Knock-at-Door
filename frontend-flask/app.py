@@ -5,11 +5,21 @@ import bcrypt
 from datetime import datetime
 from flask import jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from werkzeug.utils import secure_filename
+import os
 
 
 app = Flask(__name__)
 app.secret_key = "shourya_secret"
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Upload folder configuration
+UPLOAD_FOLDER = os.path.join("static", "uploads")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # MongoDB Config
 app.config["MONGO_URI"] = "mongodb+srv://shourchourasia912:Knock912@cluster0.k07ix.mongodb.net/knockatdoor?retryWrites=true&w=majority"
@@ -62,7 +72,7 @@ def cust_reg():
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         # Create full address
-        address = f"{house_no}, {locality}, {state} {pincode}".replace(", , ", ", ")
+        address = f"{house_no}, {locality}, {city}, {state} {pincode}".replace(", , ", ", ")
 
         try:
             # Save user
@@ -128,22 +138,44 @@ def vendor_reg():
             if users_col.find_one({"phone": phone}):
                 return "Phone number already registered"
 
-            # Get items (multiple)
+            # Get items (multiple, now with photo and price)
             items = []
-            # item1, item2 से शुरू
             for i in range(1, 10):
-                item_name = request.form.get(f"item{i}", "").strip()
-                if item_name:
-                    items.append({"_id": ObjectId(), "name": item_name})
-            
-            # item_extra[] से शुरू (dynamically added)
-            item_extras = request.form.getlist("item_extra[]")
-            for item_name in item_extras:
-                if item_name.strip():
-                    items.append({"_id": ObjectId(), "name": item_name.strip()})
+                item_name = request.form.get(f"item{i}_name", "").strip()
+                item_price = request.form.get(f"item{i}_price", "").strip()
+                item_photo = request.files.get(f"item{i}_photo")
+                if item_name and item_price and item_photo and allowed_file(item_photo.filename):
+                    filename = secure_filename(item_photo.filename)
+                    photo_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                    item_photo.save(photo_path)
+                    items.append({
+                        "_id": ObjectId(),
+                        "photo": photo_path.replace("static/", ""),
+                        "price": item_price,
+                        "name": item_name
+                    })
+
+            # item_extra[] (dynamically added)
+            item_extra_names = request.form.getlist("item_extra_name[]")
+            item_extra_prices = request.form.getlist("item_extra_price[]")
+            item_extra_photos = request.files.getlist("item_extra_photo[]")
+            for idx, item_name in enumerate(item_extra_names):
+                item_name = item_name.strip()
+                item_price = item_extra_prices[idx].strip() if idx < len(item_extra_prices) else ""
+                item_photo = item_extra_photos[idx] if idx < len(item_extra_photos) else None
+                if item_name and item_price and item_photo and allowed_file(item_photo.filename):
+                    filename = secure_filename(item_photo.filename)
+                    photo_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                    item_photo.save(photo_path)
+                    items.append({
+                        "_id": ObjectId(),
+                        "photo": photo_path.replace("static/", ""),
+                        "price": item_price,
+                        "name": item_name
+                    })
 
             if not items:
-                return "Please add at least one item"
+                return "Please add at least one item (with photo and price)"
 
             # Get localities (multiple)
             localities = []
@@ -252,19 +284,19 @@ def customer_home():
 
     print(f"✓ Customer Home loaded: {customer['first_name']} {customer['last_name']}")
 
-    # Format vendors properly
+    # Format vendors properly - only basic details
     vendor_list = []
     for v in vendors:
         vendor_items = []
         if "items" in v and isinstance(v["items"], list):
-            vendor_items = [item["name"] for item in v["items"]]
+            vendor_items = v["items"]  # Keep full item objects with photo and price
         
         vendor_list.append({
             "id": str(v["_id"]),
             "name": f"{v['first_name']} {v['last_name']}",
             "phone": v["phone"],
             "city": v.get("city", ""),
-            "vendor_items": vendor_items  # Change name to avoid conflict
+            "vendor_items": vendor_items  # Full item objects
         })
 
     return render_template(
@@ -301,8 +333,8 @@ def vendor_home():
     if not vendor:
         return redirect(url_for("login"))
 
-    # Items को properly format करो
-    items = [{"id": str(i["_id"]), "name": i["name"]} for i in vendor.get("items", [])]
+    # Items को properly format करो - photo और price के साथ
+    items = [{"id": str(i["_id"]), "name": i.get("name", ""), "photo": i.get("photo", ""), "price": i.get("price", "")} for i in vendor.get("items", [])]
     
     # Locations को properly format करो
     locations = []
@@ -314,6 +346,9 @@ def vendor_home():
             "city": vendor.get("city", "")
         })
 
+    # Create full address
+    address = f"{vendor.get('area', '')}, {vendor.get('city', '')}, {vendor.get('state', '')} {vendor.get('pincode', '')}"
+
     print(f"✓ Vendor Home loaded: {vendor['first_name']} {vendor['last_name']}")
     print(f"  Items: {[item['name'] for item in items]}")
     print(f"  Localities: {[loc['locality'] for loc in locations]}")
@@ -322,6 +357,7 @@ def vendor_home():
         "vendor_home.html",
         vendor_name=f"{vendor['first_name']} {vendor['last_name']}",
         vendor_phone=vendor["phone"],
+        vendor_address=address,
         items=items,
         locations=locations
     )
@@ -338,6 +374,146 @@ def add_item():
         {"$push": {"items": {"_id": ObjectId(), "name": item_name}}}
     )
     return redirect(url_for("vendor_home"))
+
+
+# ADD ITEM (Vendor - After Login)
+@app.route("/add_item_loggedin", methods=["POST"])
+def add_item_loggedin():
+    if "user_id" not in session or session.get("role") != "vendor":
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    item_name = request.form.get("item_name", "").strip()
+    item_price = request.form.get("item_price", "").strip()
+    item_photo = request.files.get("item_photo")
+    
+    if not item_name or not item_price:
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
+    
+    if not item_photo or not allowed_file(item_photo.filename):
+        return jsonify({"success": False, "message": "Invalid photo file"}), 400
+    
+    try:
+        vendor = vendors_col.find_one({"user_id": session["user_id"]})
+        if not vendor:
+            return jsonify({"success": False, "message": "Vendor not found"}), 404
+        
+        # Save the photo
+        filename = secure_filename(item_photo.filename)
+        photo_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        item_photo.save(photo_path)
+        
+        # Create new item
+        new_item = {
+            "_id": ObjectId(),
+            "name": item_name,
+            "price": item_price,
+            "photo": photo_path.replace("static/", "")
+        }
+        
+        # Add item to vendor's items array
+        vendors_col.update_one(
+            {"user_id": session["user_id"]},
+            {"$push": {"items": new_item}}
+        )
+        
+        print(f"✓ Item added: {item_name}, Price: {item_price}")
+        return jsonify({"success": True, "message": "Item added successfully"})
+    
+    except Exception as e:
+        print(f"✗ Error adding item: {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+# EDIT ITEM (Vendor)
+@app.route("/edit_item", methods=["POST"])
+def edit_item():
+    if "user_id" not in session or session.get("role") != "vendor":
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    item_id = request.form.get("item_id")
+    item_name = request.form.get("item_name", "").strip()
+    item_price = request.form.get("item_price", "").strip()
+    item_photo = request.files.get("item_photo")
+    
+    if not item_id or not item_name or not item_price:
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
+    
+    try:
+        vendor = vendors_col.find_one({"user_id": session["user_id"]})
+        if not vendor:
+            return jsonify({"success": False, "message": "Vendor not found"}), 404
+        
+        # Find the item to update
+        item_to_update = None
+        for item in vendor.get("items", []):
+            if str(item["_id"]) == item_id:
+                item_to_update = item
+                break
+        
+        if not item_to_update:
+            return jsonify({"success": False, "message": "Item not found"}), 404
+        
+        # Update item data
+        item_to_update["name"] = item_name
+        item_to_update["price"] = item_price
+        
+        # Handle photo upload if provided
+        if item_photo and allowed_file(item_photo.filename):
+            filename = secure_filename(item_photo.filename)
+            photo_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            item_photo.save(photo_path)
+            item_to_update["photo"] = photo_path.replace("static/", "")
+        
+        # Update vendor with new items array
+        vendors_col.update_one(
+            {"user_id": session["user_id"]},
+            {"$set": {"items": vendor["items"]}}
+        )
+        
+        print(f"✓ Item updated: {item_name}, Price: {item_price}")
+        return jsonify({"success": True, "message": "Item updated successfully"})
+    
+    except Exception as e:
+        print(f"✗ Error updating item: {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+# DELETE ITEM (Vendor)
+@app.route("/delete_item", methods=["POST"])
+def delete_item():
+    if "user_id" not in session or session.get("role") != "vendor":
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    data = request.get_json()
+    item_id = data.get("item_id")
+    
+    if not item_id:
+        return jsonify({"success": False, "message": "Missing item_id"}), 400
+    
+    try:
+        vendor = vendors_col.find_one({"user_id": session["user_id"]})
+        if not vendor:
+            return jsonify({"success": False, "message": "Vendor not found"}), 404
+        
+        # Find and remove the item
+        items = vendor.get("items", [])
+        items_after_delete = [item for item in items if str(item["_id"]) != item_id]
+        
+        if len(items_after_delete) == len(items):
+            return jsonify({"success": False, "message": "Item not found"}), 404
+        
+        # Update vendor with new items array
+        vendors_col.update_one(
+            {"user_id": session["user_id"]},
+            {"$set": {"items": items_after_delete}}
+        )
+        
+        print(f"✓ Item deleted: {item_id}")
+        return jsonify({"success": True, "message": "Item deleted successfully"})
+    
+    except Exception as e:
+        print(f"✗ Error deleting item: {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 # SEND ALERT (Vendor)
@@ -433,47 +609,64 @@ def dismiss_alert():
 # CUSTOMER WAIT NOTIFICATION (Customer)
 @app.route("/customer_wait", methods=["POST"])
 def customer_wait():
-    print(f"DEBUG: Session user_id: {session.get('user_id')}, Role: {session.get('role')}")
+    print(f"\n--- CUSTOMER WAIT REQUEST ---")
+    print(f"Session user_id: {session.get('user_id')}, Role: {session.get('role')}")
     
     if "user_id" not in session or session.get("role") != "customer":
-        print(f"DEBUG: Authorization failed - Session: {dict(session)}")
+        print(f"✗ Authorization failed - Not logged in or not a customer")
         return jsonify({"error": "Unauthorized"}), 401
     
     data = request.json
     alert_id = data.get("alert_id")
     vendor_id = data.get("vendor_id")
     
-    print(f"DEBUG: Alert ID: {alert_id}, Vendor ID: {vendor_id}")
+    print(f"Alert ID: {alert_id}")
+    print(f"Vendor ID (user_id): {vendor_id}")
+    print(f"Active socket rooms: {list(user_socket_map.keys())}")
     
     if not alert_id or not vendor_id:
+        print(f"✗ Missing required fields")
         return jsonify({"error": "Alert ID and Vendor ID required"}), 400
     
     try:
         # Get customer info
         customer = customers_col.find_one({"user_id": session["user_id"]})
         if not customer:
+            print(f"✗ Customer not found in database")
             return jsonify({"error": "Customer not found"}), 404
         
+        print(f"Customer found: {customer['first_name']} {customer['last_name']}")
+        
         # Update alert status to 'waiting'
-        alerts_col.update_one(
+        result = alerts_col.update_one(
             {"_id": ObjectId(alert_id)},
             {"$set": {"status": "waiting"}}
         )
+        print(f"Alert updated: {result.modified_count} documents modified")
         
         # Send notification to vendor via WebSocket
         emit_data = {
             "customer_name": f"{customer['first_name']} {customer['last_name']}",
             "customer_phone": customer["phone"],
-            "message": "Please wait, I am coming!"
+            "message": "Customer is waiting! Please arrive soon.",
+            "alert_id": alert_id
         }
+        
+        print(f"Emitting 'customer_wait' event to room: {vendor_id}")
         socketio.emit('customer_wait', emit_data, room=vendor_id)
         
-        print(f"✓ Customer {session['user_id']} is waiting for vendor {vendor_id}")
-        print(f"  Emit data: {emit_data}")
+        if vendor_id in user_socket_map:
+            print(f"✓ Vendor {vendor_id} is connected (socket: {user_socket_map[vendor_id]})")
+        else:
+            print(f"⚠ Vendor {vendor_id} is NOT currently connected (but message queued)")
+        
+        print(f"✓ Customer {session['user_id']} waiting for vendor {vendor_id}")
         return jsonify({"message": "Vendor notified", "status": "waiting"})
     
     except Exception as e:
         print(f"✗ Error notifying vendor: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
@@ -489,7 +682,7 @@ user_socket_map = {}
 
 @socketio.on('connect')
 def handle_connect():
-    print(f"✓ New connection: {request.sid}")
+    print(f"✓ New WebSocket connection: {request.sid}")
 
 @socketio.on('register_user')
 def handle_register_user(data):
@@ -497,8 +690,11 @@ def handle_register_user(data):
     if user_id:
         user_socket_map[user_id] = request.sid
         join_room(user_id)
-        print(f"✓ User {user_id} registered with socket {request.sid}")
+        print(f"✓ User {user_id} registered with socket {request.sid} and joined room {user_id}")
         return {"status": "registered", "user_id": user_id}
+    else:
+        print(f"✗ Register user called without user_id")
+        return {"status": "error", "message": "user_id required"}
 
 @socketio.on('disconnect')
 def handle_disconnect():
