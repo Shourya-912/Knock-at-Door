@@ -31,7 +31,7 @@
   </div>
  
   <!-- Registration Form -->
-  <form class="form-container" method="POST" action="{{ url_for('vendor_reg') }}">
+  <form class="form-container" method="POST" action="{{ url_for('vendor_reg') }}" enctype="multipart/form-data">
     <div class="form-title">Register yourself here</div>
  
     <div class="input-row">
@@ -46,12 +46,20 @@
       <input class="form-input" type="text" name="aadhar" placeholder="* Aadhar No." required>
     </div>
  
-    <!-- Vendor items -->
+    <!-- Vendor items (photo, price, name) -->
     <div class="input-row" id="item-fields">
       <i class="fa-solid fa-box input-icon"></i>
-      <input class="form-input" type="text" name="item1" placeholder="* Item 1" required>
-      <input class="form-input" type="text" name="item2" placeholder="Item 2">
+      <input class="form-input" type="text" name="item1_name" placeholder="* Item 1 Name" required>
+      <input class="form-input" type="text" name="item1_price" placeholder="* Price (e.g., 100, 250/kg)" required>
+      <input class="form-input" type="file" name="item1_photo" accept="image/*" required>
     </div>
+    <div class="input-row">
+      <i class="fa-solid fa-box input-icon"></i>
+      <input class="form-input" type="text" name="item2_name" placeholder="Item 2 Name">
+      <input class="form-input" type="text" name="item2_price" placeholder="Price (e.g., 100, 250/kg)">
+      <input class="form-input" type="file" name="item2_photo" accept="image/*">
+    </div>
+    <div id="extra-item-fields"></div>
     <button type="button" class="add-item-btn" onclick="addItemField()">+ Add Item</button>
  
     <!-- Vendor localities -->
@@ -88,15 +96,19 @@
  
   <!-- JS for dynamic fields -->
   <script>
+    let extraItemIndex = 0;
     function addItemField() {
-      const itemFields = document.getElementById("item-fields");
+      extraItemIndex++;
+      const extraFields = document.getElementById("extra-item-fields");
       const inputRow = document.createElement("div");
       inputRow.className = "input-row";
       inputRow.innerHTML = `
         <i class="fa-solid fa-box input-icon"></i>
-        <input class="form-input" type="text" name="item_extra[]" placeholder="Extra Item">
+        <input class="form-input" type="text" name="item_extra_name[]" placeholder="Extra Item Name">
+        <input class="form-input" type="text" name="item_extra_price[]" placeholder="Price (e.g., 100, 250/kg)">
+        <input class="form-input" type="file" name="item_extra_photo[]" accept="image/*">
       `;
-      itemFields.parentNode.insertBefore(inputRow, itemFields.nextSibling);
+      extraFields.appendChild(inputRow);
     }
  
     function addLocalityField() {
