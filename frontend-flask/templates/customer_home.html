@@ -61,6 +61,25 @@
 
   </div>
 
+  <!-- Vendor Items Modal -->
+  <div id="vendor-items-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; overflow-y: auto;">
+    <div style="background: white; margin: 40px auto; padding: 20px; border-radius: 12px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 id="modal-vendor-name" style="margin: 0; font-size: 22px; color: #333;"></h2>
+        <button onclick="closeVendorModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+      </div>
+      <div style="border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 20px;">
+        <p id="modal-vendor-phone" style="margin: 5px 0; color: #666;"><i class="fa-solid fa-phone"></i> <span id="modal-phone-text"></span></p>
+        <p id="modal-vendor-city" style="margin: 5px 0; color: #666;"><i class="fa-solid fa-location-dot"></i> <span id="modal-city-text"></span></p>
+      </div>
+      
+      <h3 style="color: #238915; margin-bottom: 15px; font-size: 18px;">📦 Available Items</h3>
+      <div id="modal-items-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
+        <!-- Items will be loaded here -->
+      </div>
+    </div>
+  </div>
+
   <!-- Main Container -->
   <div class="main-container">
     <div class="section-title">Available Vendors</div>
@@ -70,7 +89,7 @@
       <div class="vendors-container">
         {% for vendor in vendors %}
           <div class="vendor-card">
-            <div class="vendor-name">{{ vendor.name }}</div>
+            <div class="vendor-name" style="cursor: pointer; color: #238915; font-size: 18px;" onclick="showVendorItemsClick(this)">{{ vendor.name }}</div>
             <div class="vendor-detail">
               <i class="fa-solid fa-phone"></i>
               <span>{{ vendor.phone }}</span>
@@ -79,16 +98,10 @@
               <i class="fa-solid fa-location-dot"></i>
               <span>{{ vendor.city }}</span>
             </div>
-            <div class="items">
-              <strong>Items:</strong> 
-              {% if vendor.vendor_items %}
-                {{ vendor.vendor_items|join(', ') }}
-              {% else %}
-                No items
-              {% endif %}
-            </div>
-            <button class="action-btn" onclick="contactVendor('{{ vendor.id }}', '{{ vendor.name }}')">
-              <i class="fa-solid fa-envelope"></i> Contact
+            <!-- Hidden vendor data for JS to access -->
+            <div style="display: none;" class="vendor-data" data-vendor-id="{{ vendor.id }}" data-vendor-name="{{ vendor.name }}" data-vendor-phone="{{ vendor.phone }}" data-vendor-city="{{ vendor.city }}" data-vendor-items="{{ vendor.vendor_items|tojson|replace('\"', '&quot;') }}"></div>
+            <button onclick="showVendorItemsClick(this)" style="width: 100%; margin-top: 12px; padding: 12px; background: linear-gradient(135deg, #238915 60%, #97e463 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">
+              <i class="fa-solid fa-images"></i> View Items
             </button>
           </div>
         {% endfor %}
@@ -105,6 +118,64 @@
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script>
     let currentAlertData = {};
+    let currentVendorId = "";
+
+    // Vendor Items Modal Functions
+    function showVendorItemsClick(element) {
+      const vendorData = element.closest('.vendor-card').querySelector('.vendor-data');
+      const vendorId = vendorData.getAttribute('data-vendor-id');
+      const vendorName = vendorData.getAttribute('data-vendor-name');
+      const vendorPhone = vendorData.getAttribute('data-vendor-phone');
+      const vendorCity = vendorData.getAttribute('data-vendor-city');
+      const vendorItemsJson = vendorData.getAttribute('data-vendor-items').replace(/&quot;/g, '"');
+      
+      try {
+        const items = JSON.parse(vendorItemsJson);
+        showVendorItems(vendorId, vendorName, vendorPhone, vendorCity, items);
+      } catch(e) {
+        console.error('Error parsing vendor items:', e);
+      }
+    }
+
+    function showVendorItems(vendorId, vendorName, vendorPhone, vendorCity, items) {
+      currentVendorId = vendorId;
+      document.getElementById('modal-vendor-name').textContent = vendorName;
+      document.getElementById('modal-phone-text').textContent = vendorPhone;
+      document.getElementById('modal-city-text').textContent = vendorCity;
+      
+      const itemsContainer = document.getElementById('modal-items-container');
+      itemsContainer.innerHTML = '';
+      
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          const itemDiv = document.createElement('div');
+          itemDiv.style.cssText = 'border: 1px solid #ddd; border-radius: 8px; padding: 12px; text-align: center; background: #fafafa; transition: transform 0.2s; display: flex; flex-direction: column;';
+          itemDiv.onmouseover = () => itemDiv.style.transform = 'scale(1.05)';
+          itemDiv.onmouseout = () => itemDiv.style.transform = 'scale(1)';
+          
+          const photoPath = item.photo.startsWith('/') ? item.photo : '/' + item.photo;
+          itemDiv.innerHTML = `
+            <img src="${photoPath}" alt="${item.name}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;">
+            <h4 style="margin: 8px 0 4px; font-size: 13px; color: #333;">${item.name}</h4>
+            <p style="margin: 0; font-size: 14px; font-weight: bold; color: #238915;">₹ ${item.price}</p>
+          `;
+          itemsContainer.appendChild(itemDiv);
+        });
+      } else {
+        itemsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">No items available</p>';
+      }
+      
+      document.getElementById('vendor-items-modal').style.display = 'block';
+    }
+
+    function closeVendorModal() {
+      document.getElementById('vendor-items-modal').style.display = 'none';
+    }
+
+    function contactVendorFromModal() {
+      closeVendorModal();
+      alert('Contacting vendor...');
+    }
 
     // WebSocket Connection - Register customer on connect
     const socket = io();
