@@ -60,9 +60,13 @@
         </div>
         </div>
 
+        <!-- Edit Profile Button -->
+        <button class="edit-btn" type="button" onclick="window.location.href='{{ url_for('edit_vendor_profile') }}'">
+        <i class="fa-solid fa-edit"></i> EDIT PROFILE </button>
+
         <!-- Logout Button -->
         <button class="logout-btn" type="button" onclick="window.location.href='{{ url_for('logout') }}'">
-        LOGOUT </button>
+        <i class="fa-solid fa-arrow-left"></i> LOGOUT </button>
     </div>
     </div>
 
@@ -91,6 +95,25 @@
 
   <!-- Main Container -->
   <div class="main-container">
+    <!-- Ratings Section -->
+    <div style="background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%); border-radius: 12px; padding: 20px; margin-bottom: 30px; border-left: 5px solid #FFD700;">
+      <h2 style="margin-top: 0; color: #238915; display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-star"></i> Your Ratings
+      </h2>
+      <div id="vendor-ratings-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div style="text-align: center; padding: 15px; background: white; border-radius: 8px;">
+          <p style="font-size: 12px; color: #999; margin: 0;">Average Rating</p>
+          <p id="average-rating" style="font-size: 32px; font-weight: bold; color: #FFD700; margin: 5px 0;">-</p>
+          <p id="total-ratings" style="font-size: 12px; color: #666; margin: 0;">out of reviews</p>
+        </div>
+      </div>
+      
+      <h3 style="margin-top: 20px; color: #238915; margin-bottom: 12px;">Customer Reviews</h3>
+      <div id="reviews-container" style="max-height: 300px; overflow-y: auto;">
+        <p style="text-align: center; color: #999;">Loading reviews...</p>
+      </div>
+    </div>
+
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <div class="section-title">My Items</div>
       <button class="add-new-item-btn" onclick="openAddItemModal()" style="background: #238915; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px;">
@@ -498,6 +521,58 @@
         console.log(data);
       })
       .catch(error => console.error('Error:', error));
+    }
+
+    // Load vendor ratings on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadVendorRatingsDisplay();
+      // Refresh ratings every 30 seconds
+      setInterval(loadVendorRatingsDisplay, 30000);
+    });
+
+    function loadVendorRatingsDisplay() {
+      // Get vendor ID from template variable
+      const vendorId = '{{ vendor_id }}';
+      if (!vendorId) {
+        console.error('Vendor ID not found');
+        return;
+      }
+      
+      // Fetch ratings for this vendor
+      fetch(`/get_vendor_rating/${vendorId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (!data) return;
+          
+          const avgRating = data.average_rating || 0;
+          const totalRatings = data.total_ratings || 0;
+          const reviews = data.reviews || [];
+          
+          // Update average rating display
+          if (totalRatings === 0) {
+            document.getElementById('average-rating').textContent = '-';
+            document.getElementById('total-ratings').textContent = 'No reviews yet';
+          } else {
+            const stars = '⭐'.repeat(Math.floor(avgRating));
+            document.getElementById('average-rating').innerHTML = `${stars} <span style="font-size: 24px; color: #238915;">${avgRating.toFixed(1)}</span>`;
+            document.getElementById('total-ratings').textContent = `${totalRatings} ${totalRatings === 1 ? 'review' : 'reviews'}`;
+          }
+          
+          // Update reviews list
+          const reviewsContainer = document.getElementById('reviews-container');
+          if (reviews.length === 0) {
+            reviewsContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No reviews yet. Great work!</p>';
+          } else {
+            reviewsContainer.innerHTML = reviews.map(review => `
+              <div style="background: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid #FFD700;">
+                <p style="margin: 0 0 5px 0; font-weight: bold; color: #333;">${review.customer_name}</p>
+                <p style="margin: 0 0 8px 0; color: #FFD700;">${'⭐'.repeat(review.rating)}</p>
+                <p style="margin: 0; color: #666; font-size: 13px;">${review.review || '<em>No comment</em>'}</p>
+              </div>
+            `).join('');
+          }
+        })
+        .catch(error => console.error('Error loading ratings:', error));
     }
 
   </script>
