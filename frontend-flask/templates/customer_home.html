@@ -48,17 +48,24 @@
   </style>
 
   <!-- Top Bar with Customer Info -->
-  <div class="topbar">    
-    <div class="customer-info">
-      <p class="name">{{ customer_name }}</p>
-      <p><i class="fa-solid fa-phone"></i> {{ customer_phone }}</p>
-      <p><i class="fa-solid fa-location-dot"></i> {{ customer_address }}</p>
+  <div class="topbar">  
+    <div class="topbar-left">  
+      <div class="customer-info">
+        <p class="name">{{ customer_name }}</p>
+        <p><i class="fa-solid fa-phone"></i> {{ customer_phone }}</p>
+        <p><i class="fa-solid fa-location-dot"></i> {{ customer_address }}</p>
+      </div>
     </div>
-
-    <button class="back-btn" type="button" onclick="window.location.href='{{ url_for('logout') }}'">
-      <i class="fa-solid fa-arrow-left"></i> LOGOUT
-    </button>  
-
+    <div class="topbar-right">
+      <!-- edit profile Button -->
+      <button class="edit-btn" type="button" onclick="window.location.href='{{ url_for('edit_customer_profile') }}'">
+        <i class="fa-solid fa-edit"></i> EDIT PROFILE
+      </button>
+      <!-- Logout Button -->
+      <button class="logout-btn" type="button" onclick="window.location.href='{{ url_for('logout') }}'">
+        <i class="fa-solid fa-arrow-left"></i> LOGOUT
+      </button>  
+    </div>
   </div>
 
   <!-- Vendor Items Modal -->
@@ -71,11 +78,28 @@
       <div style="border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 20px;">
         <p id="modal-vendor-phone" style="margin: 5px 0; color: #666;"><i class="fa-solid fa-phone"></i> <span id="modal-phone-text"></span></p>
         <p id="modal-vendor-city" style="margin: 5px 0; color: #666;"><i class="fa-solid fa-location-dot"></i> <span id="modal-city-text"></span></p>
+        <p id="modal-vendor-rating" style="margin: 5px 0; color: #238915; font-weight: bold;">
+          <i class="fa-solid fa-star"></i> <span id="modal-rating-text">Loading...</span>
+        </p>
       </div>
       
       <h3 style="color: #238915; margin-bottom: 15px; font-size: 18px;">📦 Available Items</h3>
       <div id="modal-items-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
         <!-- Items will be loaded here -->
+      </div>
+
+      <div style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 20px;">
+        <h3 style="color: #238915; margin-bottom: 12px; font-size: 16px;">⭐ Rate this Vendor</h3>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input type="hidden" id="modal-vendor-id">
+          <button onclick="setRating(1)" class="rating-btn" data-rating="1" style="flex: 1; padding: 10px; border: 2px solid #ddd; background: white; color: #999; border-radius: 6px; cursor: pointer; font-size: 24px; transition: all 0.2s;">★</button>
+          <button onclick="setRating(2)" class="rating-btn" data-rating="2" style="flex: 1; padding: 10px; border: 2px solid #ddd; background: white; color: #999; border-radius: 6px; cursor: pointer; font-size: 24px; transition: all 0.2s;">★</button>
+          <button onclick="setRating(3)" class="rating-btn" data-rating="3" style="flex: 1; padding: 10px; border: 2px solid #ddd; background: white; color: #999; border-radius: 6px; cursor: pointer; font-size: 24px; transition: all 0.2s;">★</button>
+          <button onclick="setRating(4)" class="rating-btn" data-rating="4" style="flex: 1; padding: 10px; border: 2px solid #ddd; background: white; color: #999; border-radius: 6px; cursor: pointer; font-size: 24px; transition: all 0.2s;">★</button>
+          <button onclick="setRating(5)" class="rating-btn" data-rating="5" style="flex: 1; padding: 10px; border: 2px solid #ddd; background: white; color: #999; border-radius: 6px; cursor: pointer; font-size: 24px; transition: all 0.2s;">★</button>
+        </div>
+        <textarea id="review-text" placeholder="Write a review (optional)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: Arial; resize: vertical; height: 60px;"></textarea>
+        <button onclick="submitRating()" style="width: 100%; margin-top: 10px; padding: 10px; background: #238915; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s;">Submit Rating</button>
       </div>
     </div>
   </div>
@@ -89,7 +113,8 @@
       <div class="vendors-container">
         {% for vendor in vendors %}
           <div class="vendor-card">
-            <div class="vendor-name" style="cursor: pointer; color: #238915; font-size: 18px;" onclick="showVendorItemsClick(this)">{{ vendor.name }}</div>
+            <div class="vendor-name" style="cursor: pointer; color: #238915; font-size: 18px; margin-bottom: 5px;" onclick="showVendorItemsClick(this)">{{ vendor.name }}</div>
+            <div id="vendor-rating-{{ vendor.id }}" style="font-size: 12px; color: #FFD700; margin-bottom: 8px; min-height: 18px;">Loading rating...</div>
             <div class="vendor-detail">
               <i class="fa-solid fa-phone"></i>
               <span>{{ vendor.phone }}</span>
@@ -119,6 +144,7 @@
   <script>
     let currentAlertData = {};
     let currentVendorId = "";
+    let currentRating = 0;
 
     // Vendor Items Modal Functions
     function showVendorItemsClick(element) {
@@ -139,9 +165,23 @@
 
     function showVendorItems(vendorId, vendorName, vendorPhone, vendorCity, items) {
       currentVendorId = vendorId;
+      currentRating = 0;
       document.getElementById('modal-vendor-name').textContent = vendorName;
       document.getElementById('modal-phone-text').textContent = vendorPhone;
       document.getElementById('modal-city-text').textContent = vendorCity;
+      document.getElementById('modal-vendor-id').value = vendorId;
+      document.getElementById('review-text').value = '';
+      
+      // Load vendor rating
+      fetch(`/get_vendor_rating/${vendorId}`)
+        .then(response => response.json())
+        .then(data => {
+          const avgRating = data.average_rating || 0;
+          const totalRatings = data.total_ratings || 0;
+          const stars = '⭐'.repeat(Math.floor(avgRating));
+          document.getElementById('modal-rating-text').textContent = `${stars} ${avgRating.toFixed(1)} (${totalRatings} reviews)`;
+        })
+        .catch(error => console.error('Error loading rating:', error));
       
       const itemsContainer = document.getElementById('modal-items-container');
       itemsContainer.innerHTML = '';
@@ -170,6 +210,80 @@
 
     function closeVendorModal() {
       document.getElementById('vendor-items-modal').style.display = 'none';
+    }
+
+    // Rating System
+    function setRating(rating) {
+      currentRating = rating;
+      document.querySelectorAll('.rating-btn').forEach((btn, idx) => {
+        const btnRating = parseInt(btn.getAttribute('data-rating'));
+        if (btnRating <= rating) {
+          btn.style.color = '#FFD700';
+          btn.style.borderColor = '#FFD700';
+          btn.style.background = '#FFFAF0';
+        } else {
+          btn.style.color = '#999';
+          btn.style.borderColor = '#ddd';
+          btn.style.background = 'white';
+        }
+      });
+    }
+
+    function submitRating() {
+      if (currentRating === 0) {
+        alert('Please select a rating!');
+        return;
+      }
+      
+      const review = document.getElementById('review-text').value;
+      const vendorId = document.getElementById('modal-vendor-id').value;
+      
+      fetch('/submit_rating', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          vendor_id: vendorId,
+          rating: currentRating,
+          review: review
+        })
+      })
+      .then(response => response.json())
+        .then(data => {
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          alert('✓ Thank you for your rating!');
+          currentRating = 0;
+          document.getElementById('review-text').value = '';
+          // Reset rating buttons
+          document.querySelectorAll('.rating-btn').forEach(btn => {
+            btn.style.color = '#999';
+            btn.style.borderColor = '#ddd';
+            btn.style.background = 'white';
+          });
+          // Close the vendor modal to minimize the rating view
+          closeVendorModal();
+
+          // Optionally refresh the displayed rating for this vendor card
+          try {
+            const vendorId = document.getElementById('modal-vendor-id').value;
+            fetch(`/get_vendor_rating/${vendorId}`)
+              .then(r => r.json())
+              .then(d => {
+                const avg = d.average_rating || 0;
+                const total = d.total_ratings || 0;
+                const stars = '⭐'.repeat(Math.floor(avg));
+                const vendorRatingElem = document.getElementById(`vendor-rating-${vendorId}`);
+                if (vendorRatingElem) vendorRatingElem.textContent = `${stars} ${avg.toFixed(1)} (${total} reviews)`;
+              }).catch(()=>{});
+          } catch(e) {}
+        }
+      })
+      .catch(error => {
+        console.error('Error submitting rating:', error);
+        alert('Error submitting rating');
+      });
     }
 
     function contactVendorFromModal() {
@@ -278,6 +392,39 @@
     
     function contactVendor(vendorId, vendorName) {
       alert('Contacting vendor: ' + vendorName);
+    }
+
+    // Load vendor ratings on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const vendorCards = document.querySelectorAll('.vendor-card');
+      vendorCards.forEach(card => {
+        const vendorData = card.querySelector('.vendor-data');
+        const vendorId = vendorData.getAttribute('data-vendor-id');
+        loadVendorRating(vendorId);
+      });
+    });
+
+    function loadVendorRating(vendorId) {
+      fetch(`/get_vendor_rating/${vendorId}`)
+        .then(response => response.json())
+        .then(data => {
+          const ratingDiv = document.getElementById(`vendor-rating-${vendorId}`);
+          const avgRating = data.average_rating || 0;
+          const totalRatings = data.total_ratings || 0;
+          
+          if (totalRatings === 0) {
+            ratingDiv.textContent = '⭐ No ratings yet';
+            ratingDiv.style.color = '#999';
+          } else {
+            const stars = '⭐'.repeat(Math.floor(avgRating));
+            ratingDiv.innerHTML = `${stars} <strong>${avgRating.toFixed(1)}</strong> (${totalRatings} ${totalRatings === 1 ? 'review' : 'reviews'})`;
+            ratingDiv.style.color = '#FFD700';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading rating:', error);
+          document.getElementById(`vendor-rating-${vendorId}`).textContent = '⭐ Rating unavailable';
+        });
     }
   </script>
 
