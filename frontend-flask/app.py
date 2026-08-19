@@ -7,6 +7,7 @@ from flask import jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 import os
+import re
 
 
 app = Flask(__name__)
@@ -21,6 +22,45 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def is_valid_phone(phone):
+    """
+    Validate Indian phone number
+    - Exactly 10 digits
+    - Starts with 6, 7, 8, or 9
+    - No special characters
+    """
+    if not phone or not isinstance(phone, str):
+        return False
+    
+    phone = phone.strip()
+    
+    # Check if exactly 10 digits
+    if not re.match(r'^\d{10}$', phone):
+        return False
+    
+    # Check if starts with 6, 7, 8, or 9
+    if phone[0] not in ['6', '7', '8', '9']:
+        return False
+    
+    return True
+
+def is_valid_aadhar(aadhar):
+    """
+    Validate Indian Aadhar number
+    - Exactly 12 digits
+    - No special characters
+    """
+    if not aadhar or not isinstance(aadhar, str):
+        return False
+    
+    aadhar = aadhar.strip()
+    
+    # Check if exactly 12 digits and all numeric
+    if not re.match(r'^\d{12}$', aadhar):
+        return False
+    
+    return True
+
 # MongoDB Config
 app.config["MONGO_URI"] = "mongodb+srv://shourchourasia912:Knock912@cluster0.k07ix.mongodb.net/knockatdoor?retryWrites=true&w=majority"
 mongo = PyMongo(app)
@@ -29,6 +69,7 @@ users_col = mongo.db.users
 vendors_col = mongo.db.vendors
 customers_col = mongo.db.customers
 alerts_col = mongo.db.alerts
+ratings_col = mongo.db.ratings
 
 # HOME SPLASH
 @app.route("/")
@@ -50,6 +91,7 @@ def cust_reg():
         aadhar = request.form.get("aadhar", "")
         house_no = request.form.get("house_no", "")
         locality = request.form.get("locality", "")
+        area = request.form.get("area", "")
         state = request.form.get("state", "")
         city = request.form.get("city", "")
         pincode = request.form.get("pincode", "")
@@ -57,8 +99,16 @@ def cust_reg():
         confirm_password = request.form.get("confirm_password", "")
 
         # Validate required fields
-        if not all([first_name, last_name, phone, locality, state, password, confirm_password]):
+        if not all([first_name, last_name, phone, locality, area, state, password, confirm_password]):
             return "Please fill all required fields"
+
+        # Validate phone number
+        if not is_valid_phone(phone):
+            return "Invalid phone number. Please enter a valid 10-digit Indian phone number starting with 6, 7, 8, or 9"
+
+        # Validate Aadhar number (if provided)
+        if aadhar and not is_valid_aadhar(aadhar):
+            return "Invalid Aadhar number. Please enter a valid 12-digit Aadhar number"
 
         # Validate passwords match
         if password != confirm_password:
@@ -72,7 +122,7 @@ def cust_reg():
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         # Create full address
-        address = f"{house_no}, {locality}, {city}, {state} {pincode}".replace(", , ", ", ")
+        address = f"{house_no}, {locality}, {area}, {city}, {state} {pincode}".replace(", , ", ", ")
 
         try:
             # Save user
@@ -94,6 +144,7 @@ def cust_reg():
                 "aadhar": aadhar,
                 "house_no": house_no,
                 "locality": locality,
+                "area": area,
                 "state": state,
                 "city": city,
                 "pincode": pincode,
@@ -127,8 +178,16 @@ def vendor_reg():
             confirm_password = request.form.get("confirm_password", "")
 
             # Validate required fields
-            if not all([first_name, last_name, phone, aadhar, area, state, city, password, confirm_password]):
+            if not all([first_name, last_name, phone, aadhar, area, state, city, pincode, password, confirm_password]):
                 return "Please fill all required fields"
+
+            # Validate phone number
+            if not is_valid_phone(phone):
+                return "Invalid phone number. Please enter a valid 10-digit phone number"
+
+            # Validate Aadhar number
+            if not is_valid_aadhar(aadhar):
+                return "Invalid Aadhar number. Please enter a valid 12-digit Aadhar number"
 
             # Validate passwords match
             if password != confirm_password:
@@ -280,9 +339,23 @@ def customer_home():
         print(f"✗ Customer not found for user_id: {session['user_id']}")
         return redirect(url_for("login"))
 
-    vendors = list(vendors_col.find())
+    # Get customer's city and locality
+    customer_city = customer.get("city", "")
+    customer_locality = customer.get("locality", "")
+    
+    # Find vendors only from same city and locality
+    vendors = list(vendors_col.find({
+        "city": {"$regex": customer_city, "$options": "i"},
+        "localities": {
+            "$elemMatch": {
+                "name": {"$regex": customer_locality, "$options": "i"}
+            }
+        }
+    }))
 
     print(f"✓ Customer Home loaded: {customer['first_name']} {customer['last_name']}")
+    print(f"  Locality: {customer_locality}, City: {customer_city}")
+    print(f"  Found {len(vendors)} vendors in this locality")
 
     # Format vendors properly - only basic details
     vendor_list = []
@@ -333,10 +406,10 @@ def vendor_home():
     if not vendor:
         return redirect(url_for("login"))
 
-    # Items को properly format करो - photo और price के साथ
+    # formatting items properly along with price and photo
     items = [{"id": str(i["_id"]), "name": i.get("name", ""), "photo": i.get("photo", ""), "price": i.get("price", "")} for i in vendor.get("items", [])]
     
-    # Locations को properly format करो
+    # formatting Locations properly
     locations = []
     for loc in vendor.get("localities", []):
         locations.append({
@@ -347,7 +420,7 @@ def vendor_home():
         })
 
     # Create full address
-    address = f"{vendor.get('area', '')}, {vendor.get('city', '')}, {vendor.get('state', '')} {vendor.get('pincode', '')}"
+    address = f"{vendor.get('area', '')}, {vendor.get('city', '')}, {vendor.get('state', '')}, {vendor.get('pincode', '')}"
 
     print(f"✓ Vendor Home loaded: {vendor['first_name']} {vendor['last_name']}")
     print(f"  Items: {[item['name'] for item in items]}")
@@ -358,6 +431,7 @@ def vendor_home():
         vendor_name=f"{vendor['first_name']} {vendor['last_name']}",
         vendor_phone=vendor["phone"],
         vendor_address=address,
+        vendor_id=str(vendor["_id"]),
         items=items,
         locations=locations
     )
@@ -670,6 +744,109 @@ def customer_wait():
         return jsonify({"error": str(e)}), 500
 
 
+# SUBMIT RATING (Customer rates Vendor)
+@app.route("/submit_rating", methods=["POST"])
+def submit_rating():
+    if "user_id" not in session or session.get("role") != "customer":
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    vendor_id = data.get("vendor_id")
+    rating = data.get("rating")  # 1-5 stars
+    review = data.get("review", "").strip()
+    
+    if not vendor_id or not rating:
+        return jsonify({"error": "Vendor ID and rating are required"}), 400
+    
+    try:
+        rating = int(rating)
+        if rating < 1 or rating > 5:
+            return jsonify({"error": "Rating must be between 1 and 5"}), 400
+    except ValueError:
+        return jsonify({"error": "Invalid rating value"}), 400
+    
+    try:
+        customer = customers_col.find_one({"user_id": session["user_id"]})
+        vendor = vendors_col.find_one({"_id": ObjectId(vendor_id)})
+        
+        if not customer or not vendor:
+            return jsonify({"error": "Customer or vendor not found"}), 404
+        
+        # Check if customer already rated this vendor
+        existing_rating = ratings_col.find_one({
+            "vendor_id": vendor_id,
+            "customer_id": session["user_id"]
+        })
+        
+        if existing_rating:
+            # Update existing rating
+            ratings_col.update_one(
+                {"_id": existing_rating["_id"]},
+                {"$set": {
+                    "rating": rating,
+                    "review": review,
+                    "timestamp": datetime.utcnow()
+                }}
+            )
+            print(f"✓ Rating updated by customer {session['user_id']} for vendor {vendor_id}")
+        else:
+            # Insert new rating
+            ratings_col.insert_one({
+                "vendor_id": vendor_id,
+                "customer_id": session["user_id"],
+                "customer_name": f"{customer['first_name']} {customer['last_name']}",
+                "customer_phone": customer["phone"],
+                "rating": rating,
+                "review": review,
+                "timestamp": datetime.utcnow()
+            })
+            print(f"✓ New rating submitted by customer {session['user_id']} for vendor {vendor_id}: {rating} stars")
+        
+        return jsonify({"message": "Rating submitted successfully", "rating": rating})
+    
+    except Exception as e:
+        print(f"✗ Error submitting rating: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+# GET VENDOR RATING (Get average rating and reviews for a vendor)
+@app.route("/get_vendor_rating/<vendor_id>", methods=["GET"])
+def get_vendor_rating(vendor_id):
+    try:
+        ratings = list(ratings_col.find({"vendor_id": vendor_id}).sort("timestamp", -1))
+        
+        if not ratings:
+            return jsonify({
+                "average_rating": 0,
+                "total_ratings": 0,
+                "reviews": []
+            })
+        
+        average_rating = sum(r["rating"] for r in ratings) / len(ratings)
+        
+        # Only include reviews from customers who have a valid customer_name
+        reviews = [
+            {
+                "customer_name": r.get("customer_name"),
+                "rating": r["rating"],
+                "review": r.get("review", ""),
+                "timestamp": r.get("timestamp", "").isoformat() if isinstance(r.get("timestamp"), datetime) else ""
+            }
+            for r in ratings
+            if r.get("customer_name") and r.get("customer_name").strip()  # Only show if customer_name exists and is not empty
+        ]
+        
+        return jsonify({
+            "average_rating": round(average_rating, 1),
+            "total_ratings": len(ratings),
+            "reviews": reviews
+        })
+    
+    except Exception as e:
+        print(f"✗ Error fetching ratings: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 # LOGOUT
 @app.route("/logout")
 def logout():
@@ -695,6 +872,226 @@ def handle_register_user(data):
     else:
         print(f"✗ Register user called without user_id")
         return {"status": "error", "message": "user_id required"}
+
+# EDIT VENDOR PROFILE
+@app.route("/edit_vendor_profile", methods=["GET", "POST"])
+def edit_vendor_profile():
+    if "user_id" not in session or session.get("role") != "vendor":
+        return redirect(url_for("login"))
+
+    vendor = vendors_col.find_one({"user_id": session["user_id"]})
+    
+    if not vendor:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        try:
+            # Editable fields (treat empty inputs as "no change")
+            area = request.form.get("area", "").strip()
+            state = request.form.get("state", "").strip()
+            city = request.form.get("city", "").strip()
+            pincode = request.form.get("pincode", "").strip()
+            phone = request.form.get("phone", "").strip()
+            password = request.form.get("password", "").strip()
+            confirm_password = request.form.get("confirm_password", "").strip()
+
+            # Determine final values: use provided values or fall back to existing vendor values
+            final_area = area if area else vendor.get("area", "")
+            final_state = state if state else vendor.get("state", "")
+            final_city = city if city else vendor.get("city", "")
+            final_pincode = pincode if pincode else vendor.get("pincode", "")
+            final_phone = phone if phone else vendor.get("phone", "")
+
+            # Validate required final location fields and phone
+            if not all([final_area, final_state, final_city, final_pincode, final_phone]):
+                return "Please fill all required fields"
+
+            # Validate phone only when provided or when final differs
+            if phone and not is_valid_phone(final_phone):
+                return "Invalid phone number. Please enter a valid 10-digit Indian phone number starting with 6, 7, 8, or 9"
+
+            # Ensure phone uniqueness only if changed
+            if final_phone != vendor.get("phone", ""):
+                existing_user = users_col.find_one({"phone": final_phone})
+                if existing_user and str(existing_user.get("_id")) != session.get("user_id"):
+                    return "Phone number already registered"
+
+            # Process items
+            item_names = request.form.getlist("item_name[]")
+            item_prices = request.form.getlist("item_price[]")
+            items = []
+            for idx, item_name in enumerate(item_names):
+                item_name = item_name.strip()
+                item_price = item_prices[idx].strip() if idx < len(item_prices) else ""
+                if item_name and item_price:
+                    items.append({
+                        "_id": ObjectId(),
+                        "name": item_name,
+                        "price": item_price,
+                        "photo": ""  # Keep existing photo
+                    })
+
+            # If no items were submitted, keep existing items
+            if not items:
+                items = vendor.get("items", [])
+
+            # Process localities from form (if any), otherwise keep existing
+            locality_names = request.form.getlist("locality[]")
+            localities = []
+            for locality_name in locality_names:
+                ln = locality_name.strip()
+                if ln:
+                    localities.append({"_id": ObjectId(), "name": ln})
+
+            if not localities:
+                localities = vendor.get("localities", [])
+
+            # Prepare update payload using final values
+            vendor_update = {
+                "area": final_area,
+                "state": final_state,
+                "city": final_city,
+                "pincode": final_pincode,
+                "items": items,
+                "localities": localities,
+                "phone": final_phone
+            }
+
+            vendors_col.update_one(
+                {"user_id": session["user_id"]},
+                {"$set": vendor_update}
+            )
+
+            # Update phone in users collection (if changed)
+            try:
+                users_col.update_one(
+                    {"_id": ObjectId(session["user_id"])},
+                    {"$set": {"phone": final_phone}}
+                )
+            except Exception:
+                pass
+
+            # If password fields provided, validate and update users collection
+            if password or confirm_password:
+                if not password or not confirm_password:
+                    return "Please fill both password fields"
+                if password != confirm_password:
+                    return "Passwords do not match"
+                if len(password) < 6:
+                    return "Password must be at least 6 characters long"
+                hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+                users_col.update_one(
+                    {"_id": ObjectId(session["user_id"])},
+                    {"$set": {"password": hashed_password}}
+                )
+
+            print(f"✓ Vendor profile updated: {session['user_id']}")
+            return redirect(url_for("vendor_home"))
+
+        except Exception as e:
+            print(f"✗ Vendor Profile Update Error: {str(e)}")
+            return f"Update failed: {str(e)}"
+
+    return render_template("edit_vendor_profile.html", vendor=vendor, items=vendor.get("items", []))
+
+# EDIT CUSTOMER PROFILE
+@app.route("/edit_customer_profile", methods=["GET", "POST"])
+def edit_customer_profile():
+    if "user_id" not in session or session.get("role") != "customer":
+        return redirect(url_for("login"))
+
+    customer = customers_col.find_one({"user_id": session["user_id"]})
+    
+    if not customer:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        try:
+            # Only editable fields
+            state = request.form.get("state", "").strip()
+            city = request.form.get("city", "").strip()
+            house_no = request.form.get("house_no", "").strip()
+            locality = request.form.get("locality", "").strip()
+            area = request.form.get("area", "").strip()
+            pincode = request.form.get("pincode", "").strip()
+            phone = request.form.get("phone", "").strip()
+            password = request.form.get("password", "").strip()
+            confirm_password = request.form.get("confirm_password", "").strip()
+            
+            # Validate required fields (names and aadhar remain read-only)
+            if not all([state, city, locality, area, phone]):
+                return "Please fill all required fields"
+
+            # Validate phone
+            if not is_valid_phone(phone):
+                return "Invalid phone number. Please enter a valid 10-digit Indian phone number starting with 6, 7, 8, or 9"
+
+            # Ensure phone uniqueness (allow keeping same phone)
+            existing_user = users_col.find_one({"phone": phone})
+            if existing_user and str(existing_user.get("_id")) != session.get("user_id"):
+                return "Phone number already registered"
+
+            # Check if user wants to change password
+            # Build update payload for customer and also update the computed address
+            address = f"{house_no}, {locality}, {area}, {city}, {state}, {pincode}".replace(", , ", ", ")
+            address = address.strip().strip(',')
+
+            update_data = {
+                "state": state,
+                "city": city,
+                "house_no": house_no,
+                "locality": locality,
+                "area": area,
+                "pincode": pincode,
+                "address": address,
+                "phone": phone
+            }
+
+            # Check if user wants to change password
+            if password or confirm_password:
+                # If password fields are filled, validate them
+                if not password or not confirm_password:
+                    return "Please fill both password fields"
+                
+                if password != confirm_password:
+                    return "Passwords do not match"
+                
+                if len(password) < 6:
+                    return "Password must be at least 6 characters long"
+                
+                # Hash new password
+                hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+                
+                # Update password in users collection
+                users_col.update_one(
+                    {"_id": ObjectId(session["user_id"]) if isinstance(session["user_id"], str) else ObjectId(session["user_id"])},
+                    {"$set": {"password": hashed_password}}
+                )
+
+            # Update phone in users collection (if changed)
+            try:
+                users_col.update_one(
+                    {"_id": ObjectId(session["user_id"])},
+                    {"$set": {"phone": phone}}
+                )
+            except Exception:
+                # Non-fatal: continue to update customer record even if users_col update fails
+                pass
+
+            # Update customers collection with editable fields
+            customers_col.update_one(
+                {"user_id": session["user_id"]},
+                {"$set": update_data}
+            )
+
+            print(f"✓ Customer profile updated: {session['user_id']}")
+            return redirect(url_for("customer_home"))
+
+        except Exception as e:
+            print(f"✗ Customer Profile Update Error: {str(e)}")
+            return f"Update failed: {str(e)}"
+
+    return render_template("edit_customer_profile.html", customer=customer)
 
 @socketio.on('disconnect')
 def handle_disconnect():
