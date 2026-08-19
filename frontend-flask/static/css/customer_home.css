@@ -23,7 +23,18 @@
         box-shadow: 0 4px 16px rgba(34, 139, 34, 0.1);
         backdrop-filter: blur(10px);
     }
+    .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
 
+    .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+/* 
     .topbar .back-btn {
         background: #238915;
         color: white;
@@ -37,6 +48,45 @@
 
     .topbar .back-btn:hover {
       background: #0e5704;
+    }
+
+    .topbar .back-btn:nth-of-type(2) {
+        background: #FF6B35;
+    }
+
+    .topbar .back-btn:nth-of-type(2):hover {
+        background: #e55a24;
+    }
+     */
+
+    .topbar-right .logout-btn {
+        background: #FF6B35;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+    }
+
+    .topbar-right .edit-btn {
+        background: #238915;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+    }
+
+    .topbar-right .edit-btn:hover {
+        background: #0e5704;
+    }
+
+    .topbar-right .logout-btn:hover {
+        background: #e55a24;
     }
 
     .topbar .alerts-btn {
@@ -65,7 +115,7 @@
     }
 
     .customer-info p {
-      color: #238915;
+      color: #555;
       font-weight: bold;
       margin: 4px 0;
       font-size: 14px;
