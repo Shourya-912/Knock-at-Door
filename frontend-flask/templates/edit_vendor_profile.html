@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Vendor Profile</title>
+ 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+ 
+  <!-- CSS from static folder -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/intf_reg.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+</head>
+ 
+<body>
+ 
+  <!-- Animated 3D Background Shapes -->
+  <div class="bg-shape bg-shape1"></div>
+  <div class="bg-shape bg-shape2"></div>
+  <div class="bg-shape bg-shape3"></div>
+  <div class="bg-cube"></div>
+ 
+  <!-- Topbar -->
+  <div class="topbar">
+    <button class="back-btn" type="button" onclick="window.location.href='{{ url_for('vendor_home') }}'">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <span class="topbar-title">Edit Vendor Profile</span>
+  </div>
+ 
+  <!-- Edit Profile Form -->
+  <form class="form-container" method="POST" action="{{ url_for('edit_vendor_profile') }}" enctype="multipart/form-data">
+    <div class="form-title">Update Your Details</div>
+ 
+    <!-- Fixed Fields (Read-only) -->
+    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #238915;">
+      <p style="color: #666; font-size: 12px; margin-top: 0; margin-bottom: 8px;"><i class="fa-solid fa-lock"></i> These fields cannot be changed</p>
+      
+      <div class="input-row">
+        <i class="fa-solid fa-user input-icon"></i>
+        <input class="form-input" type="text" placeholder="First Name" value="{{ vendor.first_name }}" readonly style="background: #e8e8e8; cursor: not-allowed;">
+        <input class="form-input" type="text" placeholder="Last Name" value="{{ vendor.last_name }}" readonly style="background: #e8e8e8; cursor: not-allowed;">
+      </div>
+ 
+      <div class="input-row">
+        <i class="fa-solid fa-phone input-icon"></i>
+        <input class="form-input" type="text" name="phone" placeholder="Phone No." value="{{ vendor.phone }}" required>
+        <input class="form-input" type="text" placeholder="Aadhar No." value="{{ vendor.aadhar }}" readonly style="background: #e8e8e8; cursor: not-allowed;">
+      </div>
+    </div>
+
+    <!-- Editable Location Fields -->
+    <div class="input-row">
+      <i class="fa-solid fa-location-dot input-icon"></i>
+      <input class="form-input" type="text" name="area" placeholder="* Area" value="{{ vendor.area }}" required>
+      <select class="form-input" name="state" required><option value="{{ vendor.state }}">{{ vendor.state }}</option></select>
+    </div>
+ 
+    <div class="input-row">
+      <i class="fa-solid fa-city input-icon"></i>
+      <select class="form-input" name="city" required><option value="{{ vendor.city }}">{{ vendor.city }}</option></select>
+      <input class="form-input" type="text" name="pincode" placeholder="* Pincode" value="{{ vendor.pincode }}" required>
+    </div>
+
+    <!-- Items (read-only in this form; manage items from Items page) -->
+    <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 20px; margin-bottom: 15px; border-left: 4px solid #FF6B35;">
+      <h3 style="color: #333; margin-top: 0; margin-bottom: 15px; font-size: 16px;"><i class="fa-solid fa-box"></i> Your Items</h3>
+      <div id="item-fields">
+        {% if items and items|length > 0 %}
+          {% for item in items %}
+            <div class="input-row" style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 10px; align-items:center;">
+              <div style="flex:1;">
+                <strong style="display:block">{{ item.name }}</strong>
+                <small style="color:#666">Price: {{ item.price }}</small>
+              </div>
+              {% if item.photo %}
+                <img src="{{ url_for('static', filename=item.photo) }}" alt="{{ item.name }}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;margin-left:12px;">
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <p style="color:#666;">No items added yet. Use the Items section on your dashboard to add or edit items.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Editable Localities -->
+    <div style="background: #fff0f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #FF6B35;">
+      <h3 style="color: #333; margin-top: 0; margin-bottom: 15px; font-size: 16px;"><i class="fa-solid fa-map-marker-alt"></i> Your Localities</h3>
+      <div id="locality-fields">
+        {% for locality in vendor.localities %}
+        <div class="input-row" style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+          <input class="form-input" type="text" name="locality[]" placeholder="Locality/Society" value="{{ locality.name }}" required>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="add-locality-btn" onclick="addLocalityField()" style="width: 100%; margin-top: 10px;">+ Add Locality</button>
+    </div>
+ 
+    <button class="submit-btn" type="submit">UPDATE PROFILE</button>
+  </form>
+ 
+  <!-- JS for dynamic fields -->
+  <script>
+    // State and City data
+    const stateCities = {
+      "Andhra Pradesh": ["Amaravati", "Visakhapatnam", "Vijayawada", "Nellore", "Kurnool", "Tirupati", "Anantapur", "Guntur", "Tenali", "Ongole"],
+      "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Pasighat", "Tezpur", "Changlang", "Tezu", "Roing", "Seppa", "Ziro", "Namsai"],
+      "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Nagaon", "Tinsukia", "Barpeta", "Karimganj", "Sonitpur", "Jorhat", "Golaghat"],
+      "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Purnia", "Darbhanga", "Bihar Sharif", "Arrah", "Begusarai", "Katihar"],
+      "Chhattisgarh": ["Raipur", "Bhilai", "Durg", "Rajnandgaon", "Bilaspur", "Korba", "Raigarh", "Dhamtari", "Mandir", "Jagdalpur"],
+      "Goa": ["Panaji", "Vasco da Gama", "Margao", "Mapusa", "Pernem", "Bicholim", "Ponda", "Sattari", "Sanguem", "Quepem"],
+      "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Junagadh", "Gandhinagar", "Anand", "Nadiad"],
+      "Haryana": ["Faridabad", "Gurgaon", "Hisar", "Rohtak", "Panipat", "Ambala", "Yamunanagar", "Karnal", "Jind", "Sirsa"],
+      "Himachal Pradesh": ["Shimla", "Solan", "Mandi", "Kangra", "Hamirpur", "Bilaspur", "Kinnaur", "Chamba", "Kullu", "Palampur"],
+      "Jharkhand": ["Ranchi", "Dhanbad", "Giridih", "Bokaro", "Hazaribagh", "Dumka", "Deoghar", "Chaibasa", "Medininagar", "Simdega"],
+      "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangalore", "Belgaum", "Gulbarga", "Davangere", "Bellary", "Bijapur", "Shimoga"],
+      "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Alappuzha", "Pathanamthitta", "Idukki", "Wayanad", "Kasaragod", "Ernakulam"],
+      "Madhya Pradesh": ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Sagar", "Rewa", "Satna", "Ratlam", "Dewas"],
+      "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", "Solapur", "Kolhapur", "Amravati", "Nanded"],
+      "Manipur": ["Imphal", "Bishnupur", "Thoubal", "Ukhrul", "Senapati", "Churachandpur", "Tamenglong", "Kakching", "Jiribam", "Chandel"],
+      "Meghalaya": ["Shillong", "Tura", "Nongstoin", "Jowai", "Baghmara", "Williamnagar", "Nongpoh", "Cherrapunji", "Umroi", "Mairang"],
+      "Mizoram": ["Aizawl", "Lunglei", "Saiha", "Champhai", "Lawngtlai", "Mamit", "Kolasib", "Serchhip", "Thenzawl", "Bilkhawthlir"],
+      "Nagaland": ["Kohima", "Dimapur", "Mokokchung", "Tuensang", "Kiphire", "Longleng", "Mon", "Phek", "Peren", "Zunheboto"],
+      "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur", "Balasore", "Puri", "Berhampur", "Jeypore", "Angul", "Dhenkanal"],
+      "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Hoshiarpur", "Batala", "Pathankot", "Moga"],
+      "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Bikaner", "Alwar", "Bharatpur", "Sikar", "Churu"],
+      "Sikkim": ["Gangtok", "Namchi", "Singtam", "Gyalshing", "Mangan", "Pakyong", "Rangpo", "Soreng", "Ravangla", "Dentam"],
+      "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Tiruppur", "Vellore", "Erode", "Thoothukudi"],
+      "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Ramagundam", "Khammam", "Mahbubnagar", "Medak", "Nalgonda", "Adilabad"],
+      "Tripura": ["Agartala", "Dharmanagar", "Udaipur", "Ambassa", "Kailashahar", "Kumarghat", "Belonia", "Sabroom", "Teliamura", "Jirania"],
+      "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Meerut", "Varanasi", "Allahabad", "Moradabad", "Aligarh", "Saharanpur"],
+      "Uttarakhand": ["Dehradun", "Haridwar", "Rishikesh", "Nainital", "Almora", "Ranikhet", "Mussoorie", "Auli", "Pithoragarh", "Bageshwar"],
+      "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Maheshtala", "Rajpur Sonarpur", "South Dum Dum", "Rajarhat Gopalpur", "Bhatpara"],
+      "Delhi": ["New Delhi", "Delhi", "East Delhi", "North Delhi", "South Delhi", "West Delhi", "Central Delhi", "North-East Delhi", "North-West Delhi", "South-East Delhi"]
+    };
+
+    function isValidPhone(phone) {
+      const phoneRegex = /^[6-9]\d{9}$/;
+      return phoneRegex.test(phone);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const stateSelect = document.querySelector('select[name="state"]');
+      const citySelect = document.querySelector('select[name="city"]');
+      
+      // Populate state dropdown
+      for (const state in stateCities) {
+        if (!Array.from(stateSelect.options).some(option => option.value === state)) {
+          const option = document.createElement('option');
+          option.value = state;
+          option.textContent = state;
+          stateSelect.appendChild(option);
+        }
+      }
+      
+      // Populate city dropdown on page load
+      const currentState = stateSelect.value;
+      if (currentState && stateCities[currentState]) {
+        stateCities[currentState].forEach(city => {
+          if (!Array.from(citySelect.options).some(option => option.value === city)) {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            citySelect.appendChild(option);
+          }
+        });
+      }
+      
+      // Update city dropdown when state changes
+      stateSelect.addEventListener('change', function() {
+        const selectedState = this.value;
+        citySelect.innerHTML = '<option value="">* Select City</option>';
+        if (selectedState && stateCities[selectedState]) {
+          stateCities[selectedState].forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            citySelect.appendChild(option);
+          });
+        }
+      });
+    });
+
+    // Form submission handler
+    document.querySelector('.form-container').addEventListener('submit', function(event) {
+      // Validate localities (items are read-only on this page)
+      const localities = document.querySelectorAll('input[name="locality[]"]');
+      if (localities.length === 0) {
+        event.preventDefault();
+        alert('❌ Please add at least one locality');
+        return false;
+      }
+
+      return true;
+    });
+
+    let extraItemIndex = 0;
+    function addItemField() {
+      extraItemIndex++;
+      const itemFields = document.getElementById("item-fields");
+      const inputRow = document.createElement("div");
+      inputRow.className = "input-row";
+      inputRow.style.background = "white";
+      inputRow.style.padding = "10px";
+      inputRow.style.borderRadius = "6px";
+      inputRow.style.marginBottom = "10px";
+      inputRow.innerHTML = `
+        <input class="form-input" type="text" name="item_name[]" placeholder="Item Name" required>
+        <input class="form-input" type="text" name="item_price[]" placeholder="Price (e.g., 100, 250/kg)" required>
+      `;
+      itemFields.appendChild(inputRow);
+    }
+
+    function addLocalityField() {
+      const localityFields = document.getElementById("locality-fields");
+      const inputRow = document.createElement("div");
+      inputRow.className = "input-row";
+      inputRow.style.background = "white";
+      inputRow.style.padding = "10px";
+      inputRow.style.borderRadius = "6px";
+      inputRow.style.marginBottom = "10px";
+      inputRow.innerHTML = `
+        <input class="form-input" type="text" name="locality[]" placeholder="Locality/Society" required>
+      `;
+      localityFields.appendChild(inputRow);
+    }
+  </script>
+ 
+</body>
+</html>
