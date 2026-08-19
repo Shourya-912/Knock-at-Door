@@ -46,6 +46,17 @@
     }
 
     .topbar-right .logout-btn {
+        background: #FF6B35;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+    }
+
+    .topbar-right .edit-btn {
         background: #238915;
         color: white;
         border: none;
@@ -56,8 +67,12 @@
         transition: background 0.3s;
     }
 
-    .topbar-left .logout-btn:hover {
+    .topbar-right .edit-btn:hover {
         background: #0e5704;
+    }
+
+    .topbar-right .logout-btn:hover {
+        background: #e55a24;
     }
 
     .vendor-info {
@@ -76,6 +91,7 @@
         font-size: 13px;
         color: #555;
         margin: 0;
+        font-weight: bold;
     }
 
     /* Locations Dropdown */
