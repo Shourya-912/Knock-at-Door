@@ -14,12 +14,12 @@
       font-family: Arial, sans-serif;
       min-height: 100vh;
       padding: 0;
-      padding-top: 90px;
+      
     }
 
     /* Top Navigation Bar */
     .topbar {
-        position: fixed;
+        position: relative;
         top: 0;
         left: 0;
         right: 0;
@@ -45,7 +45,7 @@
         gap: 12px;
     }
 
-    .topbar-right .logout-btn {
+    /* .topbar-right .logout-btn {
         background: #FF6B35;
         color: white;
         border: none;
@@ -66,14 +66,14 @@
         font-size: 14px;
         transition: background 0.3s;
     }
-
+    
     .topbar-right .edit-btn:hover {
         background: #0e5704;
     }
 
     .topbar-right .logout-btn:hover {
         background: #e55a24;
-    }
+    } */
 
     .vendor-info {
         display: flex;
@@ -169,6 +169,31 @@
     .location-item .alert-btn:hover {
       background: #cc5555;
     }
+
+    /* Compact dropdown (icon) styles */
+    .compact-menu-btn {
+      background: #97e463;
+      color: #0e5704;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      gap: 8px;
+      display:flex; 
+      align-items:center;
+      justify-content:center;
+    }
+
+    .compact-menu-btn:hover { background: #238915; color: white; }
+
+    .compact-menu-menu { min-width:200px; border: #0e5704; }
+
+    .compact-menu-item { display:block; padding:10px 12px; color:#333; text-decoration:none; }
+    .compact-menu-item:hover { background:#0e5704; color: white; }
+
+    .compact-lang { padding:6px 8px; border-radius:6px; text-decoration:none; color:#238915; }
+    .compact-lang:hover { background:#0e5704; color: white; }
 
     /* Main Container */
     .main-container {
@@ -297,3 +322,4 @@
     .no-items .add-item-btn:hover {
       background: #0e5704;
     }
+
