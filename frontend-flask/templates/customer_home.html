@@ -57,13 +57,22 @@
       </div>
     </div>
     <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:8px;margin-right:12px;">
+        {% for lang in languages %}
+          {% if lang == current_lang %}
+            <strong style="font-size:12px">{{ lang.upper() }}</strong>
+          {% else %}
+            <a href="{{ url_for('set_language', lang=lang) }}" style="font-size:12px;color:#238915;text-decoration:none">{{ lang.upper() }}</a>
+          {% endif %}
+        {% endfor %}
+      </div>
       <!-- edit profile Button -->
       <button class="edit-btn" type="button" onclick="window.location.href='{{ url_for('edit_customer_profile') }}'">
-        <i class="fa-solid fa-edit"></i> EDIT PROFILE
+        <i class="fa-solid fa-edit"></i> {{ _('Edit Profile') }}
       </button>
       <!-- Logout Button -->
       <button class="logout-btn" type="button" onclick="window.location.href='{{ url_for('logout') }}'">
-        <i class="fa-solid fa-arrow-left"></i> LOGOUT
+        <i class="fa-solid fa-arrow-left"></i> {{ _('Logout') }}
       </button>  
     </div>
   </div>
@@ -83,13 +92,13 @@
         </p>
       </div>
       
-      <h3 style="color: #238915; margin-bottom: 15px; font-size: 18px;">📦 Available Items</h3>
+      <h3 style="color: #238915; margin-bottom: 15px; font-size: 18px;">📦 {{ _('Available Items') }}</h3>
       <div id="modal-items-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
         <!-- Items will be loaded here -->
       </div>
 
       <div style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 20px;">
-        <h3 style="color: #238915; margin-bottom: 12px; font-size: 16px;">⭐ Rate this Vendor</h3>
+        <h3 style="color: #238915; margin-bottom: 12px; font-size: 16px;">⭐ {{ _('Rate this Vendor') }}</h3>
         <div style="display: flex; gap: 8px; margin-bottom: 12px;">
           <input type="hidden" id="modal-vendor-id">
           <button onclick="setRating(1)" class="rating-btn" data-rating="1" style="flex: 1; padding: 10px; border: 2px solid #ddd; background: white; color: #999; border-radius: 6px; cursor: pointer; font-size: 24px; transition: all 0.2s;">★</button>
@@ -98,15 +107,15 @@
           <button onclick="setRating(4)" class="rating-btn" data-rating="4" style="flex: 1; padding: 10px; border: 2px solid #ddd; background: white; color: #999; border-radius: 6px; cursor: pointer; font-size: 24px; transition: all 0.2s;">★</button>
           <button onclick="setRating(5)" class="rating-btn" data-rating="5" style="flex: 1; padding: 10px; border: 2px solid #ddd; background: white; color: #999; border-radius: 6px; cursor: pointer; font-size: 24px; transition: all 0.2s;">★</button>
         </div>
-        <textarea id="review-text" placeholder="Write a review (optional)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: Arial; resize: vertical; height: 60px;"></textarea>
-        <button onclick="submitRating()" style="width: 100%; margin-top: 10px; padding: 10px; background: #238915; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s;">Submit Rating</button>
+        <textarea id="review-text" placeholder="{{ _('Write a review (optional)') }}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: Arial; resize: vertical; height: 60px;"></textarea>
+        <button onclick="submitRating()" style="width: 100%; margin-top: 10px; padding: 10px; background: #238915; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s;">{{ _('Submit Rating') }}</button>
       </div>
     </div>
   </div>
 
   <!-- Main Container -->
   <div class="main-container">
-    <div class="section-title">Available Vendors</div>
+  <div class="section-title">{{ _('Available Vendors') }}</div>
 
     <!-- Vendors List -->
     {% if vendors %}
@@ -126,7 +135,7 @@
             <!-- Hidden vendor data for JS to access -->
             <div style="display: none;" class="vendor-data" data-vendor-id="{{ vendor.id }}" data-vendor-name="{{ vendor.name }}" data-vendor-phone="{{ vendor.phone }}" data-vendor-city="{{ vendor.city }}" data-vendor-items="{{ vendor.vendor_items|tojson|replace('\"', '&quot;') }}"></div>
             <button onclick="showVendorItemsClick(this)" style="width: 100%; margin-top: 12px; padding: 12px; background: linear-gradient(135deg, #238915 60%, #97e463 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">
-              <i class="fa-solid fa-images"></i> View Items
+              <i class="fa-solid fa-images"></i> {{ _('View Items') }}
             </button>
           </div>
         {% endfor %}
@@ -134,8 +143,8 @@
     {% else %}
       <div class="no-vendors">
         <i class="fa-solid fa-inbox"></i>
-        <p>No vendors available at the moment</p>
-        <p style="font-size: 14px; margin-top: 10px; color: #666;">Please check back later!</p>
+        <p>{{ _('No vendors available at the moment') }}</p>
+        <p style="font-size: 14px; margin-top: 10px; color: #666;">{{ _('Please check back later!') }}</p>
       </div>
     {% endif %}
   </div>
@@ -194,15 +203,16 @@
           itemDiv.onmouseout = () => itemDiv.style.transform = 'scale(1)';
           
           const photoPath = item.photo.startsWith('/') ? item.photo : '/' + item.photo;
+          const displayName = item.display_name || item.name;
           itemDiv.innerHTML = `
-            <img src="${photoPath}" alt="${item.name}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;">
-            <h4 style="margin: 8px 0 4px; font-size: 13px; color: #333;">${item.name}</h4>
+            <img src="${photoPath}" alt="${displayName}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;">
+            <h4 style="margin: 8px 0 4px; font-size: 13px; color: #333;">${displayName}</h4>
             <p style="margin: 0; font-size: 14px; font-weight: bold; color: #238915;">₹ ${item.price}</p>
           `;
           itemsContainer.appendChild(itemDiv);
         });
       } else {
-        itemsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">No items available</p>';
+        itemsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #999;">${{ _('No items available')|tojson }}</p>`;
       }
       
       document.getElementById('vendor-items-modal').style.display = 'block';
@@ -231,7 +241,7 @@
 
     function submitRating() {
       if (currentRating === 0) {
-        alert('Please select a rating!');
+        alert({{ _('Please select a rating!')|tojson }});
         return;
       }
       
@@ -253,7 +263,7 @@
         if (data.error) {
           alert('Error: ' + data.error);
         } else {
-          alert('✓ Thank you for your rating!');
+          alert('\u2713 ' + {{ _('Thank you for your rating!')|tojson }});
           currentRating = 0;
           document.getElementById('review-text').value = '';
           // Reset rating buttons
@@ -288,7 +298,7 @@
 
     function contactVendorFromModal() {
       closeVendorModal();
-      alert('Contacting vendor...');
+      alert({{ _('Contacting vendor...')|tojson }});
     }
 
     // WebSocket Connection - Register customer on connect
@@ -322,7 +332,7 @@
       } else if (data.vendor_items) {
         itemsText = data.vendor_items;
       } else {
-        itemsText = 'No items';
+        itemsText = {{ _('No items available')|tojson }};
       }
       document.getElementById('alert-items').textContent = `📦 Items: ${itemsText}`;
       document.getElementById('phone-number').textContent = data.vendor_phone;
@@ -344,9 +354,9 @@
         })
       })
       .then(response => response.json())
-      .then(data => {
+        .then(data => {
         console.log('✓ Alert dismissed:', data);
-        alert('Alert dismissed successfully.');
+        alert({{ _('Alert dismissed successfully.')|tojson }});
       })
       .catch(error => console.error('Error dismissing alert:', error));
     }
@@ -377,7 +387,7 @@
       })
       .then(data => {
         console.log('✓ Vendor notified:', data);
-        alert('Vendor has been notified! Please wait.');
+        alert({{ _('Vendor has been notified! Please wait.')|tojson }});
       })
       .catch(error => console.error('Error notifying vendor:', error));
     }
@@ -391,7 +401,7 @@
     }
     
     function contactVendor(vendorId, vendorName) {
-      alert('Contacting vendor: ' + vendorName);
+      alert({{ _('Contacting vendor...')|tojson }} + ' ' + vendorName);
     }
 
     // Load vendor ratings on page load
