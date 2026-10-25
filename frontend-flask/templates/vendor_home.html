@@ -39,7 +39,7 @@
         <!-- Locations Dropdown -->
         <div class="locations-dropdown">
         <button class="dropdown-btn" onclick="toggleDropdown()">
-            <i class="fa-solid fa-map-marker-alt"></i> Locations
+          <i class="fa-solid fa-map-marker-alt"></i> {{ _('Locations') }}
         </button>
         <div class="dropdown-menu" id="dropdown-menu">
             {% if locations %}
@@ -48,7 +48,7 @@
                 <span class="location-name">{{ location.locality }} - {{ location.area }}, {{ location.city }}</span>
                 <!-- Locations Dropdown में हर location के लिए alert button -->
                 <button class="alert-btn" onclick="sendAlert('{{ location.locality }}', '{{ location.area }}', '{{ location.city }}')">
-                  <i class="fa-solid fa-bell"></i> Alert
+                  <i class="fa-solid fa-bell"></i> {{ _('Alert') }}
                 </button>
                 </div>
             {% endfor %}
@@ -60,13 +60,40 @@
         </div>
         </div>
 
-        <!-- Edit Profile Button -->
-        <button class="edit-btn" type="button" onclick="window.location.href='{{ url_for('edit_vendor_profile') }}'">
-        <i class="fa-solid fa-edit"></i> EDIT PROFILE </button>
 
-        <!-- Logout Button -->
+
+        <!-- Edit Profile Button
+        <button class="edit-btn" type="button" onclick="window.location.href='{{ url_for('edit_vendor_profile') }}'">
+        <i class="fa-solid fa-edit"></i> {{ _('Edit Profile') }} </button>-->
+
+        <!-- Logout Button 
         <button class="logout-btn" type="button" onclick="window.location.href='{{ url_for('logout') }}'">
-        <i class="fa-solid fa-arrow-left"></i> LOGOUT </button>
+        <i class="fa-solid fa-arrow-left"></i> {{ _('Logout') }} </button> -->
+
+
+
+        <!-- Compact dropdown (icon) - DOES NOT change existing button behavior -->
+        <div class="compact-menu" style="position:relative;">
+          <button class="compact-menu-btn" type="button" onclick="toggleCompactMenu()" aria-expanded="false" title="{{ _('Menu') }}">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+          </button>
+          <div class="compact-menu-menu" id="compact-menu-menu" style="display:none; position:absolute; right:0; top:42px; background:white; border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,0.12); min-width:200px; z-index:200;">
+            <a class="compact-menu-item" href="{{ url_for('edit_vendor_profile') }}"><i class="fa-solid fa-edit"></i> {{ _('Edit Profile') }}</a>
+            <a class="compact-menu-item" href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-left"></i> {{ _('Logout') }}</a>
+            <div style="border-top:1px solid #f0f0f0; padding:8px;">
+              <div style="font-size:12px;color:#666;margin-bottom:6px;">{{ _('Language') }}</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                {% for lang in languages %}
+                  {% if lang == current_lang %}
+                    <span style="font-weight:bold;padding:6px 8px;border-radius:6px;background:#f0f0f0">{{ lang.upper() }}</span>
+                  {% else %}
+                    <a class="compact-lang" href="{{ url_for('set_language', lang=lang) }}">{{ lang.upper() }}</a>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
     </div>
 
@@ -97,27 +124,27 @@
   <div class="main-container">
     <!-- Ratings Section -->
     <div style="background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%); border-radius: 12px; padding: 20px; margin-bottom: 30px; border-left: 5px solid #FFD700;">
-      <h2 style="margin-top: 0; color: #238915; display: flex; align-items: center; gap: 10px;">
-        <i class="fa-solid fa-star"></i> Your Ratings
+        <h2 style="margin-top: 0; color: #238915; display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-star"></i> {{ _('Your Ratings') }}
       </h2>
       <div id="vendor-ratings-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
         <div style="text-align: center; padding: 15px; background: white; border-radius: 8px;">
-          <p style="font-size: 12px; color: #999; margin: 0;">Average Rating</p>
+          <p style="font-size: 12px; color: #999; margin: 0;">{{ _('Average Rating') }}</p>
           <p id="average-rating" style="font-size: 32px; font-weight: bold; color: #FFD700; margin: 5px 0;">-</p>
-          <p id="total-ratings" style="font-size: 12px; color: #666; margin: 0;">out of reviews</p>
+          <p id="total-ratings" style="font-size: 12px; color: #666; margin: 0;">{{ _('out of reviews') }}</p>
         </div>
       </div>
       
-      <h3 style="margin-top: 20px; color: #238915; margin-bottom: 12px;">Customer Reviews</h3>
+      <h3 style="margin-top: 20px; color: #238915; margin-bottom: 12px;">{{ _('Customer Reviews') }}</h3>
       <div id="reviews-container" style="max-height: 300px; overflow-y: auto;">
-        <p style="text-align: center; color: #999;">Loading reviews...</p>
+        <p style="text-align: center; color: #999;">{{ _('Loading reviews...') }}</p>
       </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <div class="section-title">My Items</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div class="section-title">{{ _('My Items') }}</div>
       <button class="add-new-item-btn" onclick="openAddItemModal()" style="background: #238915; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-plus"></i> Add New Item
+        <i class="fa-solid fa-plus"></i> {{ _('Add New Item') }}
       </button>
     </div>
 
@@ -133,7 +160,7 @@
                 <i class="fa-solid fa-box"></i>
               {% endif %}
             </div>
-            <div class="item-name">{{ item.name }}</div>
+            <div class="item-name">{{ item.display_name or item.name }}</div>
             <div class="item-desc">
               {% if item.price %}
                 <strong>₹ {{ item.price }}</strong>
@@ -143,12 +170,12 @@
             </div>
             <div style="display: flex; margin-top: 5px;">
               <button class="edit-btn" onclick="editItem('{{ item.id }}')" style="flex: 1;">
-                <i class="fa-solid fa-edit"></i> Edit
+                <i class="fa-solid fa-edit"></i> {{ _('Edit') }}
               </button>
             </div>
             <div style="display: flex; margin-top: 7px;">
               <button class="delete-btn" onclick="deleteItem('{{ item.id }}', '{{ item.name }}')" style="flex: 1; background: linear-gradient(135deg, #ff4444 60%, #ff8888 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; padding: 8px; transition: all 0.3s;">
-                <i class="fa-solid fa-trash"></i> Delete
+                <i class="fa-solid fa-trash"></i> {{ _('Delete') }}
               </button>
             </div>
           </div>
@@ -157,10 +184,10 @@
     {% else %}
       <div class="no-items">
         <i class="fa-solid fa-inbox"></i>
-        <p>No items uploaded yet</p>
-        <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Start by adding your first item</p>
+        <p>{{ _('No items uploaded yet') }}</p>
+        <p style="font-size: 14px; color: #666; margin-bottom: 20px;">{{ _('Start by adding your first item') }}</p>
         <button class="add-item-btn" onclick="openAddItemModal()" style="background: #238915; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-          <i class="fa-solid fa-plus"></i> Add Item
+          <i class="fa-solid fa-plus"></i> {{ _('Add Item') }}
         </button>
       </div>
     {% endif %}
@@ -242,20 +269,29 @@
     </div>
   </div>
 
-  <script>
-    function toggleDropdown() {
-      const dropdown = document.getElementById('dropdown-menu');
-      dropdown.classList.toggle('show');
-    }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-      const dropdown = document.getElementById('dropdown-menu');
-      const dropdownBtn = document.querySelector('.dropdown-btn');
-      if (!event.target.closest('.locations-dropdown')) {
-        dropdown.classList.remove('show');
+    <script>
+      function toggleDropdown() {
+        const dropdown = document.getElementById('dropdown-menu');
+        dropdown.classList.toggle('show');
       }
-    });
+
+      function toggleCompactMenu() {
+        const menu = document.getElementById('compact-menu-menu');
+        if (!menu) return;
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      }
+
+      // Close dropdowns when clicking outside
+      document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('dropdown-menu');
+        if (!event.target.closest('.locations-dropdown')) {
+          if (dropdown) dropdown.classList.remove('show');
+        }
+        const compactMenu = document.getElementById('compact-menu-menu');
+        if (!event.target.closest('.compact-menu')) {
+          if (compactMenu) compactMenu.style.display = 'none';
+        }
+      });
 
     function editItem(itemId) {
       // Get the item data from the item card
@@ -523,6 +559,13 @@
       .catch(error => console.error('Error:', error));
     }
 
+    // Localized messages used by ratings UI (fallback to literal Hindi when current_lang == 'hi')
+    const TXT_NO_REVIEWS = "{{ 'अभी कोई समीक्षा नहीं' if current_lang == 'hi' else _('No reviews yet') }}";
+    const TXT_NO_REVIEWS_GREAT = "{{ 'अभी कोई समीक्षा नहीं। बढ़िया काम!' if current_lang == 'hi' else _('No reviews yet. Great work!') }}";
+    const TXT_REVIEW = "{{ 'समीक्षा' if current_lang == 'hi' else _('review') }}";
+    const TXT_REVIEWS = "{{ 'समीक्षाएँ' if current_lang == 'hi' else _('reviews') }}";
+    const TXT_NO_COMMENT = "{{ 'कोई टिप्पणी नहीं' if current_lang == 'hi' else _('No comment') }}";
+
     // Load vendor ratings on page load
     document.addEventListener('DOMContentLoaded', function() {
       loadVendorRatingsDisplay();
@@ -551,23 +594,23 @@
           // Update average rating display
           if (totalRatings === 0) {
             document.getElementById('average-rating').textContent = '-';
-            document.getElementById('total-ratings').textContent = 'No reviews yet';
+            document.getElementById('total-ratings').textContent = TXT_NO_REVIEWS;
           } else {
             const stars = '⭐'.repeat(Math.floor(avgRating));
             document.getElementById('average-rating').innerHTML = `${stars} <span style="font-size: 24px; color: #238915;">${avgRating.toFixed(1)}</span>`;
-            document.getElementById('total-ratings').textContent = `${totalRatings} ${totalRatings === 1 ? 'review' : 'reviews'}`;
+            document.getElementById('total-ratings').textContent = `${totalRatings} ${totalRatings === 1 ? TXT_REVIEW : TXT_REVIEWS}`;
           }
           
           // Update reviews list
           const reviewsContainer = document.getElementById('reviews-container');
           if (reviews.length === 0) {
-            reviewsContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No reviews yet. Great work!</p>';
+            reviewsContainer.innerHTML = `<p style="text-align: center; color: #999; padding: 20px;">${TXT_NO_REVIEWS_GREAT}</p>`;
           } else {
             reviewsContainer.innerHTML = reviews.map(review => `
               <div style="background: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid #FFD700;">
                 <p style="margin: 0 0 5px 0; font-weight: bold; color: #333;">${review.customer_name}</p>
                 <p style="margin: 0 0 8px 0; color: #FFD700;">${'⭐'.repeat(review.rating)}</p>
-                <p style="margin: 0; color: #666; font-size: 13px;">${review.review || '<em>No comment</em>'}</p>
+                <p style="margin: 0; color: #666; font-size: 13px;">${review.review || `<em>${TXT_NO_COMMENT}</em>`}</p>
               </div>
             `).join('');
           }
